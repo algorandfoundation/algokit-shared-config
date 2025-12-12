@@ -6,7 +6,7 @@ inputs:
     description: "The path to the documentation artifact to publish (e.g., docs/_html)"
     required: true
     type: string
-  bot_token:
+  github_token:
     description: "GitHub App bot token with permissions to deploy to GitHub Pages"
     required: true
     type: string
@@ -22,4 +22,4 @@ runs:
       id: deployment
       uses: actions/deploy-pages@v4
       with:
-        token: ${{ inputs.bot_token }}
+        token: ${{ inputs.github_token }}

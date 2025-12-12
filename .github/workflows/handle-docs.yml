@@ -44,4 +44,4 @@ jobs:
         uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@ci/reusable_docs_generation
         with:
           artifact_path: docs/downloaded
-          bot_token: ${{ inputs.github_token }}
+          github_token: ${{ inputs.github_token }}
