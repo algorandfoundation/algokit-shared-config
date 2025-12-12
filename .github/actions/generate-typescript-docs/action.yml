@@ -17,7 +17,7 @@ runs:
 
     - name: Copy Typedoc Base Config
       shell: bash
-      run: cp "${{ inputs.base_config_path }}" ./typedoc.base.json
+      run: cp "${GITHUB_ACTION_PATH}/${{ inputs.base_config_path }}" ./typedoc.base.json
 
     - name: Build doc (Run typedoc)
       shell: bash
