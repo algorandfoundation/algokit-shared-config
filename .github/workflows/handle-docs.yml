@@ -21,6 +21,7 @@ jobs:
           name: github-pages-docs
           path: docs/_html
           retention-days: 1
+          base_config_path: "${{ github.action_path }}/typedoc.base.json"
 
   publish-docs:
     needs: build-docs
