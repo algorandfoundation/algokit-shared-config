@@ -35,7 +35,7 @@ function detectDocGenerator(docsPath) {
     }
   }
 
-  // Check for TypeDoc or JSDoc in package.json
+  // Check for TypeDoc in package.json
   const packageJsonPath = join(cwd, 'package.json');
   if (existsSync(packageJsonPath)) {
     try {
@@ -46,21 +46,8 @@ function detectDocGenerator(docsPath) {
         const version = deps.typedoc.replace(/^[\^~]/, '');
         return { tool: 'typedoc', version };
       }
-
-      if (deps.jsdoc) {
-        const version = deps.jsdoc.replace(/^[\^~]/, '');
-        return { tool: 'jsdoc', version };
-      }
     } catch (err) {
       console.error('Warning: Could not parse package.json:', err.message);
-    }
-  }
-
-  // Check for JSDoc config files
-  const jsdocConfigs = ['.jsdoc.json', 'jsdoc.json'];
-  for (const config of jsdocConfigs) {
-    if (existsSync(join(cwd, config))) {
-      return { tool: 'jsdoc', version: 'unknown' };
     }
   }
 
