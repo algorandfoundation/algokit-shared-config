@@ -5,7 +5,6 @@ inputs:
   bot-token:
     description: The Bot Token for committing changes back to the repository.
     required: true
-    type: string
 
 runs:
   using: "composite"
