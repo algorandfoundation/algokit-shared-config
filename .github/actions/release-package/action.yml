@@ -2,8 +2,11 @@ name: Release Package
 description: Makes a release of the package
 
 inputs:
-  bot-token:
+  BOT_TOKEN:
     description: The Bot Token for committing changes back to the repository.
+    required: true
+  NPM_AUTH_TOKEN:
+    description: Custom NPM auth token for private package access.
     required: true
 
 runs:
@@ -30,5 +33,5 @@ runs:
     - name: Run Semantic Release
       run: npx semantic-release@latest
       env:
-        GITHUB_TOKEN: ${{ inputs.bot-token }}
-        NPM_TOKEN: ${{ secrets.npm-auth-token }}
+        GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
+        NPM_TOKEN: ${{ inputs.NPM_AUTH_TOKEN }}

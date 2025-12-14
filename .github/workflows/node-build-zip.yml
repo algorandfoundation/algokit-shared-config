@@ -37,7 +37,6 @@ on:
         type: string
         default: .env.sample
         description: Path to the .env file containing environment variable keys.
-    secrets:
       NPM_AUTH_TOKEN:
         description: Custom NPM auth token for private package access.
         required: true
