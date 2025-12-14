@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: 1. Setup Environment and Auth
-        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-node-auth@main # Adjust path as needed
+        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-node-auth@ci/ak-node-build # Adjust path as needed
         with:
           node-version: ${{ inputs.node-version }}
           working-directory: ${{ inputs.working-directory }}
@@ -66,14 +66,14 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
 
       - name: 3. Run Build Scripts
-        uses: algorandfoundation/algokit-shared-config/.github/actions/run-build-scripts@main # Adjust path as needed
+        uses: algorandfoundation/algokit-shared-config/.github/actions/run-build-scripts@ci/ak-node-build # Adjust path as needed
         with:
           npm-auth-token: ${{ secrets.npm-auth-token }}
           pre-run-script: ${{ inputs.pre-run-script }}
           working-directory: ${{ inputs.working-directory }}
 
       - name: 4. Archive and Upload Artifact
-        uses: algorandfoundation/algokit-shared-config/.github/actions/archive-artifact@main # Adjust path as needed
+        uses: algorandfoundation/algokit-shared-config/.github/actions/archive-artifact@ci/ak-node-build # Adjust path as needed
         with:
           build-path: ${{ inputs.build-path }}
           artifact-name: ${{ inputs.artifact-name }}
