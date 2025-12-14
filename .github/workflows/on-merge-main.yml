@@ -36,15 +36,15 @@ jobs:
 
   check_docs:
     name: Check docs are up to date
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/publish.yml@ci/release-workflow
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/check-docs.yml@ci/release-workflow
 
   generate-publish-docs:
     name: Publish docs
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/build-publish-docs.yml@ci/release-workflow
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@ci/release-workflow
 
   release:
     name: Release Package
     needs: [check_docs, generate-publish-docs]
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@ci/release-workflow
-    secrets:
+    uses: algorandfoundation/algokit-shared-config/.github/actions/release-package.yml@ci/release-workflow
+    with:
       bot-token: ${{ secrets.bot-token }}
