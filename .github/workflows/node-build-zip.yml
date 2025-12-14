@@ -40,7 +40,7 @@ on:
     secrets:
       npm-auth-token:
         description: Custom NPM auth token for private package access.
-        required: true # Now required
+        required: true
       github-token:
         description: The GITHUB_TOKEN required for checkout and GitHub package access.
         required: true

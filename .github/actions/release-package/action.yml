@@ -1,0 +1,35 @@
+name: Release Package
+description: Makes a release of the package
+
+inputs:
+  bot-token:
+    description: The Bot Token for committing changes back to the repository.
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set Git user as GitHub actions
+      run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
+    - name: Use node 20
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+    - name: Download built package artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Package
+        path: artifacts
+
+    - name: Unzip package
+      run: unzip artifacts/package.zip -d dist
+
+    - name: Install dependencies for semantic release
+      run: npm ci --prefix release-package --ignore-scripts
+
+    - name: Run Semantic Release
+      run: npx semantic-release@latest
+      env:
+        GITHUB_TOKEN: ${{ inputs.bot-token }}
+        NPM_TOKEN: ${{ secrets.npm-auth-token }}

@@ -1,0 +1,53 @@
+name: On Merge to Main
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_call:
+    secrets:
+      npm-auth-token:
+        description: Custom NPM auth token for private package access.
+        required: true
+      github-token:
+        description: The GITHUB_TOKEN required for checkout and GitHub package access.
+        required: true
+        type: string
+      bot-token:
+        description: The Bot Token for committing changes back to the repository.
+        required: true
+        type: string
+
+jobs:
+  ci:
+    name: Fake CI Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip CI for testing downstream jobs
+        run: echo "Skipping actual CI checks for now to test build and release sequence."
+
+  build:
+    name: Build and Zip Package
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-build-zip.yml@ci/reusable_node_build_zip
+    with:
+      node-version: 20.x
+      build-path: dist
+      artifact-name: package
+    secrets:
+      npm-auth-token: ${{ secrets.NPM_TOKEN }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  check_docs:
+    name: Check docs are up to date
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/publish.yml@ci/release-workflow
+
+  generate-publish-docs:
+    name: Publish docs
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/build-publish-docs.yml@ci/release-workflow
+
+  release:
+    name: Release Package
+    needs: [check_docs, generate-publish-docs]
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@ci/release-workflow
+    with:
+      bot-token: ${{ secrets.bot-token }}
