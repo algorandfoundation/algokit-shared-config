@@ -1,9 +1,10 @@
-# .github/workflows/algokit-node-build-zip.yml - REVISED
+# .github/workflows/algokit-node-build-zip.yml - FINAL REVISION
 name: Generic Node.js Build and Zip
 
 on:
   workflow_call:
     inputs:
+      # ... (Inputs remain the same) ...
       node-version:
         required: false
         type: string
@@ -29,7 +30,7 @@ on:
         required: false
         type: string
         default: VITE
-        description: Environment variable prefix (e.g., VITE for Vite, REACT_APP for CRA).
+        description: Environment variable prefix.
       pre-run-script:
         required: false
         type: string
@@ -42,10 +43,11 @@ on:
       npm-auth-token:
         description: Custom NPM auth token for private package access (optional).
         required: false
+      # REQUIRED FIX: Explicitly define the required GITHUB_TOKEN here.
+      # The caller must now pass this explicitly.
       github-token:
-        # REQUIRED CHANGE: Removed default: ${{ github.token }}
-        description: GITHUB_TOKEN for package access. Caller should pass ${{ secrets.GITHUB_TOKEN }} or secrets.inherit
-        required: false
+        description: The GITHUB_TOKEN required for checkout and package access.
+        required: true # Making it required simplifies logic, but you can set to false if your org's rules allow GITHUB_TOKEN inheritance.
 
 jobs:
   build-zip:
@@ -57,10 +59,10 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
 
     steps:
+      # ... (Checkout and Setup Node.js steps remain the same) ...
+
       - name: ⚙️ Checkout Repository
         uses: actions/checkout@v4
-
-      # --- Setup Node.js ---
 
       - name: 🟢 Set up Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v4
@@ -71,34 +73,27 @@ jobs:
 
       # --- Authentication Setup ---
 
-      # REQUIRED CHANGE: Simplified IF condition and moved logic entirely into the run block.
+      # FIX 1: Simplify logic, use a fallback variable inside the run block.
       - name: 🔑 Configure NPM Auth (For Private Packages)
-        # Check if either token secret is provided OR if the default GITHUB_TOKEN is available
-        if: ${{ secrets.npm-auth-token || secrets.github-token || secrets.GITHUB_TOKEN }}
+        # Check if the npm-auth-token is provided OR if the github-token is provided
+        if: ${{ secrets.npm-auth-token || secrets.github-token }}
         run: |
-          # Use the provided npm-auth-token, fallback to the explicitly passed github-token, 
-          # and finally fallback to the built-in GITHUB_TOKEN
-          TOKEN=${{ secrets.npm-auth-token || secrets.github-token || secrets.GITHUB_TOKEN }}
+          # Use the npm-auth-token OR the github-token passed by the caller.
+          TOKEN=${{ secrets.npm-auth-token || secrets.github-token }}
 
-          # Only proceed if a token is actually available (prevents empty string auth)
           if [[ -n "$TOKEN" ]]; then
             echo "//npm.pkg.github.com/:_authToken=${TOKEN}" > .npmrc
-            echo "NPM authentication configured using a provided token or GITHUB_TOKEN fallback."
+            echo "NPM authentication configured."
           fi
         shell: bash
-        # Pass the tokens as environment variables to the step, which is safer than direct bash interpolation
-        env:
-          npm_auth_token: ${{ secrets.npm-auth-token }}
-          github_token_secret: ${{ secrets.github-token }}
-          github_token_default: ${{ secrets.GITHUB_TOKEN }} # Use built-in token
 
-      # ... (Rest of the steps are fine, token usage is handled below) ...
+      # ... (Pre-run and Static Site steps remain the same) ...
 
       - name: ⬇️ Install Dependencies (npm ci --ignore-scripts)
         run: npm ci --ignore-scripts
         env:
-          # Use the same token fallback logic safely within the environment context
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.github-token || secrets.GITHUB_TOKEN }}
+          # FIX 2: Use the provided tokens with the simplified fallback logic.
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.github-token }}
 
       - name: 🛠️ Run Post-Install Scripts (npm rebuild & prepare)
         run: npm rebuild && npm run prepare --if-present
@@ -109,7 +104,16 @@ jobs:
       - name: 🏗️ Build Project
         run: npm run build
         env:
-          # Use the same token fallback logic safely within the environment context
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.github-token || secrets.GITHUB_TOKEN }}
+          # FIX 3: Use the provided tokens with the simplified fallback logic.
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.github-token }}
 
-      # ... (Artifact creation and upload remains the same) ...
+      - name: 🗜️ Zip build folder
+        run: pushd ${{ inputs.build-path}}; zip -q -r ../${{ inputs.artifact-name }}.zip *; popd
+        shell: bash
+
+      - name: ⬆️ Upload Zipped Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.working-directory }}/${{ inputs.artifact-name }}.zip
+          if-no-files-found: error
