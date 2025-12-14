@@ -1,4 +1,4 @@
-# .github/workflows/algokit-node-build-zip.yml - FINAL REVISION
+# .github/workflows/algokit-node-build-zip.yml - SIMPLIFIED
 name: Generic Node.js Build and Zip
 
 on:
@@ -41,13 +41,11 @@ on:
         description: Path to the .env file containing environment variable keys.
     secrets:
       npm-auth-token:
-        description: Custom NPM auth token for private package access (optional).
-        required: false
-      # REQUIRED FIX: Explicitly define the required GITHUB_TOKEN here.
-      # The caller must now pass this explicitly.
+        description: Custom NPM auth token for private package access.
+        required: true # Now required
       github-token:
-        description: The GITHUB_TOKEN required for checkout and package access.
-        required: true # Making it required simplifies logic, but you can set to false if your org's rules allow GITHUB_TOKEN inheritance.
+        description: The GITHUB_TOKEN required for checkout and GitHub package access.
+        required: true # Now required
 
 jobs:
   build-zip:
@@ -59,10 +57,11 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
 
     steps:
-      # ... (Checkout and Setup Node.js steps remain the same) ...
-
+      # Use the github-token for private repository checkout
       - name: ⚙️ Checkout Repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.github-token }}
 
       - name: 🟢 Set up Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v4
@@ -71,29 +70,33 @@ jobs:
           cache: "npm"
           cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 
-      # --- Authentication Setup ---
+      # --- Authentication Setup: Simplified to use only the dedicated NPM token ---
 
-      # FIX 1: Simplify logic, use a fallback variable inside the run block.
       - name: 🔑 Configure NPM Auth (For Private Packages)
-        # Check if the npm-auth-token is provided OR if the github-token is provided
-        if: ${{ secrets.npm-auth-token || secrets.github-token }}
         run: |
-          # Use the npm-auth-token OR the github-token passed by the caller.
-          TOKEN=${{ secrets.npm-auth-token || secrets.github-token }}
-
-          if [[ -n "$TOKEN" ]]; then
-            echo "//npm.pkg.github.com/:_authToken=${TOKEN}" > .npmrc
-            echo "NPM authentication configured."
-          fi
+          # Use the dedicated NPM token
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.npm-auth-token }}" > .npmrc
         shell: bash
 
-      # ... (Pre-run and Static Site steps remain the same) ...
+      # --- Pre-Build Steps (no change) ---
+
+      - name: 🔨 Pre-run Script (Optional)
+        if: ${{ inputs.pre-run-script }}
+        run: ${{ inputs.pre-run-script }}
+
+      - name: 🌐 Prepare Static Site Config Transformation
+        if: ${{ inputs.static-site }}
+        run: |
+          sed -n 's/\(${{ inputs.static-site-env-prefix }}_[A-Z0-9_]\+\)=\(.*\)/\1={{\1}}/p' ${{ inputs.sample-env-path }} > .env && cat .env
+        shell: bash
+
+      # --- Dependency Installation (Simplified env) ---
 
       - name: ⬇️ Install Dependencies (npm ci --ignore-scripts)
         run: npm ci --ignore-scripts
         env:
-          # FIX 2: Use the provided tokens with the simplified fallback logic.
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.github-token }}
+          # Use only the dedicated NPM auth token
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token }}
 
       - name: 🛠️ Run Post-Install Scripts (npm rebuild & prepare)
         run: npm rebuild && npm run prepare --if-present
@@ -104,8 +107,10 @@ jobs:
       - name: 🏗️ Build Project
         run: npm run build
         env:
-          # FIX 3: Use the provided tokens with the simplified fallback logic.
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.github-token }}
+          # Use only the dedicated NPM auth token
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token }}
+
+      # --- Artifact Creation and Upload (no change) ---
 
       - name: 🗜️ Zip build folder
         run: pushd ${{ inputs.build-path}}; zip -q -r ../${{ inputs.artifact-name }}.zip *; popd
