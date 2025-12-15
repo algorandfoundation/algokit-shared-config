@@ -13,7 +13,7 @@ inputs:
   NPM_TOKEN:
     description: "NPM auth token for private package access."
     required: true
-  GITHUB_TOKEN:
+  GH_TOKEN:
     description: "GITHUB_TOKEN for checkout and GitHub package access."
     required: true
 
@@ -23,7 +23,7 @@ runs:
     - name: ⚙️ Checkout Repository
       uses: actions/checkout@v4
       with:
-        token: ${{ inputs.GITHUB_TOKEN }} # Use the provided token for private repo checkout
+        token: ${{ inputs.GH_TOKEN }} # Use the provided token for private repo checkout
         fetch-depth: 0
 
     - name: 🟢 Set up Node.js ${{ inputs.node-version }}
