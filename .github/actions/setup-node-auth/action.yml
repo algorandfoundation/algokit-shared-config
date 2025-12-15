@@ -10,11 +10,8 @@ inputs:
     description: "The working directory for subsequent steps."
     required: false
     default: "."
-  npm-auth-token:
+  NPM_TOKEN:
     description: "NPM auth token for private package access."
-    required: true
-  github-token:
-    description: "GITHUB_TOKEN for checkout and GitHub package access."
     required: true
 
 runs:
@@ -31,4 +28,4 @@ runs:
       shell: bash
       run: |
         # Use the dedicated NPM token to create the .npmrc file
-        echo "//npm.pkg.github.com/:_authToken=${{ inputs.npm-auth-token }}" > .npmrc
+        echo "//npm.pkg.github.com/:_authToken=${{ inputs.NPM_TOKEN }}" > .npmrc
