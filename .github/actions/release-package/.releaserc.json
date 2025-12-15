@@ -1,11 +1,9 @@
 {
   "branches": [
+    "main",
     {
-      "name": "main",
+      "name": "ci/ak-node-build",
       "prerelease": "beta"
-    },
-    {
-      "name": "release"
     }
   ],
   "plugins": [
