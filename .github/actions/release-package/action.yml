@@ -17,13 +17,14 @@ runs:
       with:
         fetch-depth: 0
         token: ${{ inputs.BOT_TOKEN }}
+        persist-credentials: true
 
     - name: Set Git user as GitHub actions
       shell: bash
       run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
 
     - name: Use node 20
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: 20
 
@@ -43,7 +44,7 @@ runs:
 
     - name: Run Semantic Release
       shell: bash
-      run: npx semantic-release
       env:
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
+      run: npx semantic-release
