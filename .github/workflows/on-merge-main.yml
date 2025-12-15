@@ -41,7 +41,7 @@ jobs:
 
   release:
     name: Release Package
-    needs: [check_docs, generate-publish-docs]
+    needs: [ci, build, check_docs, generate-publish-docs]
     uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@ci/release-workflow
     secrets:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
