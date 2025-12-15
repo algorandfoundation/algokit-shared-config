@@ -32,19 +32,14 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
-  check_docs:
+  build-check-publish-docs:
     needs: ci
-    name: Check docs are up to date
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/check-docs.yml@pr/release-workflow
-
-  generate-publish-docs:
-    needs: check_docs
-    name: Publish docs
+    name: Build, Check and Publish Docs
     uses: algorandfoundation/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@pr/release-workflow
 
   release:
     name: Release Package
-    needs: [ci, build, check_docs, generate-publish-docs]
+    needs: [ci, build, build-check-publish-docs]
     uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@pr/release-workflow
     secrets:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}

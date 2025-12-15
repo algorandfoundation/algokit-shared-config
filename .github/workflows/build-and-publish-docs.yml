@@ -1,17 +1,28 @@
-name: "Run typedoc and publish to pages"
+name: "Build, Check and Publish Docs"
 
 on:
   workflow_call:
 
 jobs:
-  build-docs:
+  build-and-check-docs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Build Typedoc Documentation
         uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@pr/release-workflow
+
+      - name: Check docs are up to date
+        shell: bash
+        run: |
+          # Add untracked files as empty so they come up in diff
+          git add -N .
+          # Print changed files and error out if there are changes after generating docs
+          git diff --exit-code --name-only
+
       - name: Upload Documentation Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -20,7 +31,7 @@ jobs:
           retention-days: 1
 
   publish-docs:
-    needs: build-docs
+    needs: build-and-check-docs
     runs-on: ubuntu-latest
     steps:
       - name: Download Documentation Artifact
