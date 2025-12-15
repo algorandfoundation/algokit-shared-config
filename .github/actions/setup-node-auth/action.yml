@@ -20,12 +20,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: ⚙️ Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        token: ${{ inputs.GH_TOKEN }} # Use the provided token for private repo checkout
-        fetch-depth: 0
-
     - name: 🟢 Set up Node.js ${{ inputs.node-version }}
       uses: actions/setup-node@v4
       with:

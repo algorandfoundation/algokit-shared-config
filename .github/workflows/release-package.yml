@@ -24,7 +24,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.BOT_TOKEN }}
 
       - name: Release Package
         uses: algorandfoundation/algokit-shared-config/.github/actions/release-package@ci/release-workflow

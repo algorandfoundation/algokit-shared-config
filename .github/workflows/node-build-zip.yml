@@ -50,6 +50,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: 1. Setup Environment and Auth
         uses: algorandfoundation/algokit-shared-config/.github/actions/setup-node-auth@ci/ak-node-build # Adjust path as needed
         with:
