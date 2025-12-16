@@ -51,11 +51,6 @@ function detectDocGenerator(docsPath) {
     }
   }
 
-  // Check for TypeDoc config
-  if (existsSync(join(cwd, 'typedoc.json'))) {
-    return { tool: 'typedoc', version: 'unknown' };
-  }
-
   return { tool: 'other', version: 'unknown' };
 }
 
