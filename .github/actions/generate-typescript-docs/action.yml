@@ -19,6 +19,10 @@ runs:
       shell: bash
       run: node "${{ github.action_path }}/generate-typedoc-config.js"
 
-    - name: Build doc (Run typedoc)
+    - name: Build Docs (Markdown)
       shell: bash
-      run: npm run generate:code-docs
+      run: npx typedoc --options typedoc.markdown.json
+
+    - name: Build Docs (GH Pages)
+      shell: bash
+      run: npx typedoc --options typedoc.html.json

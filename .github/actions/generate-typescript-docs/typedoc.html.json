@@ -3,14 +3,10 @@
   "entryPoints": ["src/index.ts", "src/types/*.ts"],
   "exclude": ["src/**/*.spec.ts", "tests/**/*.*", "examples/**/*.*"],
   "entryPointStrategy": "expand",
-  "outputs": [
-    { "name": "html", "path": "docs/_html" },
-    { "name": "markdown", "path": "docs/code" }
-  ],
-  "plugin": ["typedoc-plugin-markdown"],
+  "outputs": [{ "name": "html", "path": "docs/_html" }],
   "theme": "default",
   "cleanOutputDir": true,
-  "githubPages": true,
+  "projectDocuments": ["docs/*.md"],
   "readme": "docs/README.md",
   "gitRevision": "main",
   "tsconfig": "tsconfig.build.json",
