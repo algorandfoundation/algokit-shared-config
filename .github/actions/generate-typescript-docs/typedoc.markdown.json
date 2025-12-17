@@ -5,7 +5,6 @@
   "entryPointStrategy": "expand",
   "outputs": [{ "name": "markdown", "path": "docs/api" }],
   "plugin": ["typedoc-plugin-markdown"],
-  "theme": "default",
   "cleanOutputDir": true,
   "readme": "docs/README.md",
   "gitRevision": "main",
