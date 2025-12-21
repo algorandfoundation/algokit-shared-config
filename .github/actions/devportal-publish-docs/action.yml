@@ -42,6 +42,17 @@ runs:
       shell: bash
       run: npx typedoc --options typedoc.devportal.json
 
+    - name: Copy guides to staging folder
+      shell: bash
+      run: |
+        if [[ -d "docs/guides" ]]; then
+          mkdir -p "${{ inputs.docs_path }}/guides"
+          cp -R docs/guides/. "${{ inputs.docs_path }}/guides/"
+          echo "✅ Copied guides folder to ${{ inputs.docs_path }}/guides"
+        else
+          echo "ℹ️  No guides folder found at docs/guides, skipping"
+        fi
+
     - name: Generate manifest
       shell: bash
       run: node "${{ github.action_path }}/generate-manifest.mjs" "${{ inputs.docs_path }}" "${{ github.repository }}" "${{ github.sha }}"

@@ -3,7 +3,7 @@
   "entryPoints": ["src/index.ts", "src/types/*.ts"],
   "exclude": ["src/**/*.spec.ts", "tests/**/*.*", "examples/**/*.*"],
   "entryPointStrategy": "expand",
-  "outputs": [{ "name": "markdown", "path": ".devportal" }],
+  "outputs": [{ "name": "markdown", "path": ".devportal/api" }],
   "plugin": ["typedoc-plugin-markdown", "./frontmatter-plugin.mjs"],
   "cleanOutputDir": true,
   "gitRevision": "main",
