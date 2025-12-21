@@ -5,7 +5,7 @@ inputs:
   docs_path:
     description: "Location relative to the repo root of the docs folder"
     required: false
-    default: "docs"
+    default: ".devportal"
   docs_branch:
     description: "Name of the branch to publish the docs to"
     required: false
@@ -18,19 +18,31 @@ outputs:
   docs_target:
     description: "The version target that was published (e.g., 'latest' or 'v1.2.3')"
     value: ${{ steps.docs_target.outputs.target }}
-  update_latest:
-    description: "Whether the latest folder was updated"
-    value: ${{ steps.docs_target.outputs.update_latest }}
 
 runs:
   using: composite
   steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22.x
 
-    - name: Generate manifest.json
+    - name: Install dependencies
+      run: npm ci
+      shell: bash
+
+    - name: Setup typedoc configuration
+      shell: bash
+      run: node "${{ github.action_path }}/typedoc-config.js"
+
+    - name: Build docs
+      shell: bash
+      run: npx typedoc --options typedoc.devportal.json
+
+    - name: Generate manifest
       shell: bash
       run: node "${{ github.action_path }}/generate-manifest.mjs" "${{ inputs.docs_path }}" "${{ github.repository }}" "${{ github.sha }}"
 
@@ -47,55 +59,30 @@ runs:
           # Strip leading 'v' if present to get clean version
           version="${tag#v}"
           target="v${version}"
-          update_latest="true"
         else
           target="latest"
-          update_latest="false"
         fi
         echo "target=$target" >> "$GITHUB_OUTPUT"
-        echo "update_latest=$update_latest" >> "$GITHUB_OUTPUT"
-        echo "Publishing to: $target (update_latest: $update_latest)"
+        echo "Publishing to: $target"
 
-    - name: Checkout docs branch
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.docs_branch }}
-        path: docs-branch
-      continue-on-error: true
-
-    - name: Prepare publish workspace
-      shell: bash
-      run: |
-        docs_path="${{ inputs.docs_path }}"
-        target="${{ steps.docs_target.outputs.target }}"
-
-        # Start with existing docs branch content (if it exists)
-        if [[ -d "docs-branch" ]]; then
-          rm -rf docs-branch/.git
-          mv docs-branch publish-staging
-        else
-          mkdir -p publish-staging
-        fi
-
-        # Overwrite target version folder
-        rm -rf "publish-staging/${target}"
-        mkdir -p "publish-staging/${target}"
-        cp -R "${docs_path}/." "publish-staging/${target}/"
-
-        # Overwrite latest folder on release
-        if [[ "${{ steps.docs_target.outputs.update_latest }}" == "true" ]]; then
-          rm -rf "publish-staging/latest"
-          mkdir -p "publish-staging/latest"
-          cp -R "${docs_path}/." "publish-staging/latest/"
-        fi
-
-    - name: Publish docs branch
+    - name: Publish docs to target version
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ inputs.github_token }}
-        publish_dir: publish-staging
+        publish_dir: ${{ inputs.docs_path }}
         publish_branch: ${{ inputs.docs_branch }}
-        keep_files: false
+        destination_dir: ${{ steps.docs_target.outputs.target }}
+        keep_files: true
+
+    - name: Publish docs to latest (on release)
+      if: github.event_name == 'release'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ inputs.github_token }}
+        publish_dir: ${{ inputs.docs_path }}
+        publish_branch: ${{ inputs.docs_branch }}
+        destination_dir: latest
+        keep_files: true
 
     - name: Summary
       if: always()
