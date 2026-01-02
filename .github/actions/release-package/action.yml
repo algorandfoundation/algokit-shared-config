@@ -50,11 +50,14 @@ runs:
       run: |
         echo "🚀 Running Semantic Release via npx..."
 
-        # We define the plugins we need here.
-        # This keeps your project's package.json empty of these heavy devDeps.
-        PLUGINS="@semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/github @semantic-release/npm"
+        # We must verify the command syntax:
+        # -p (package) flags must precede EVERY plugin.
+        # The final argument is the actual command ('semantic-release').
 
         npx --yes \
           -p semantic-release \
-          -p $PLUGINS \
+          -p "@semantic-release/commit-analyzer" \
+          -p "@semantic-release/release-notes-generator" \
+          -p "@semantic-release/github" \
+          -p "@semantic-release/npm" \
           semantic-release
