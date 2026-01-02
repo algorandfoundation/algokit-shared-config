@@ -38,7 +38,8 @@ runs:
 
     - name: Install semantic-release
       shell: bash
-      run: npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github @semantic-release/npm
+      working-directory: ${{ github.action_path }}
+      run: npm ci
 
     - name: Run Semantic Release
       shell: bash
