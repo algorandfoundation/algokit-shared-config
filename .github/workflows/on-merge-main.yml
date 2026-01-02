@@ -61,5 +61,5 @@ jobs:
     uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@ref/consistency-ref-implementation
 
     secrets:
-      BOT_TOKEN: ${{ inputs.BOT_TOKEN }}
+      BOT_TOKEN: ${{ secrets.GH_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
