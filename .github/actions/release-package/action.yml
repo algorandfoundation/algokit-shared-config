@@ -39,7 +39,7 @@ runs:
     - name: Install semantic-release
       shell: bash
       working-directory: ${{ github.action_path }}
-      run: npm ci
+      run: npm install
 
     - name: Run Semantic Release
       shell: bash
