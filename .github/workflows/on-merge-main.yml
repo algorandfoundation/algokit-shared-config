@@ -14,9 +14,6 @@ on:
       GH_TOKEN:
         description: GitHub token required for checkout and GitHub package access.
         required: true
-      BOT_TOKEN:
-        description: The Bot Token for committing changes back to the repository.
-        required: true
 jobs:
   debug_secrets_ingress:
     name: 🕵️ Debug Secret Ingress
