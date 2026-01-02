@@ -13,7 +13,7 @@ jobs:
           fetch-depth: 1
 
       - name: Build Typedoc Documentation
-        uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@pr/release-workflow
+        uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@ref/consistency-ref-implementation
 
       - name: Check docs are up to date
         shell: bash
@@ -41,6 +41,6 @@ jobs:
           path: docs/downloaded
 
       - name: Deploy Documentation
-        uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@pr/release-workflow
+        uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@ref/consistency-ref-implementation
         with:
           artifact_path: docs/downloaded

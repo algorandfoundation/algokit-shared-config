@@ -23,7 +23,7 @@ jobs:
   build:
     name: Build and Zip Package
     needs: ci
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-build-zip.yml@pr/release-workflow
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/node-build-zip.yml@ref/consistency-ref-implementation
     with:
       node-version: 20.x
       build-path: dist
@@ -35,12 +35,12 @@ jobs:
   build-check-publish-docs:
     needs: ci
     name: Build, Check and Publish Docs
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@pr/release-workflow
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/build-and-publish-docs.yml@ref/consistency-ref-implementation
 
   release:
     name: Release Package
     needs: [ci, build, build-check-publish-docs]
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@pr/release-workflow
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/release-package.yml@ref/consistency-ref-implementation
     secrets:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
