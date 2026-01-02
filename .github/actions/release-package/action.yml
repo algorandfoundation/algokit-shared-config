@@ -45,16 +45,17 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}
       env:
+        # ✅ Correct: Map the input directly to the variable semantic-release expects
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
       run: |
         echo "🚀 Running Semantic Release via npx..."
 
-        # We define the plugins we need here.
-        # This keeps your project's package.json empty of these heavy devDeps.
-        PLUGINS="@semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/github @semantic-release/npm"
-
+        # Reminder: -p must act on EACH plugin individually
         npx --yes \
           -p semantic-release \
-          -p $PLUGINS \
+          -p "@semantic-release/commit-analyzer" \
+          -p "@semantic-release/release-notes-generator" \
+          -p "@semantic-release/github" \
+          -p "@semantic-release/npm" \
           semantic-release
