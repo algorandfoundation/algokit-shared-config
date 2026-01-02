@@ -13,6 +13,24 @@ on:
         description: The Bot Token for committing changes back to the repository.
         required: true
 jobs:
+  debug_secrets_ingress:
+    name: 🕵️ Debug Secret Ingress
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Received Secrets
+        env:
+          # Map the secret to an env var to check it
+          BOT_TOKEN_CHECK: ${{ secrets.BOT_TOKEN }}
+        run: |
+          echo "🔍 Checking if Shared Workflow received the BOT_TOKEN..."
+
+          if [ -z "$BOT_TOKEN_CHECK" ]; then
+            echo "❌ CRITICAL: 'secrets.BOT_TOKEN' is EMPTY in this workflow!"
+            echo "   This means the Caller Workflow did not pass it correctly."
+            exit 1
+          else
+            echo "✅ SUCCESS: 'secrets.BOT_TOKEN' is present (Length: ${#BOT_TOKEN_CHECK})"
+          fi
   ci:
     name: Fake CI Check
     runs-on: ubuntu-latest
