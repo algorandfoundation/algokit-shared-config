@@ -47,4 +47,4 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
-      run: npx semantic-release
+      run: npm run release
