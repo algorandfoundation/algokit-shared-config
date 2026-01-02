@@ -45,7 +45,6 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}
       env:
-        # ✅ Correct: Map the input directly to the variable semantic-release expects
         GITHUB_TOKEN: ${{ inputs.BOT_TOKEN }}
         NPM_TOKEN: ${{ inputs.NPM_TOKEN }}
       run: |
