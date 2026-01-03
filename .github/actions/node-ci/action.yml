@@ -24,7 +24,12 @@ runs:
         cache: "npm"
         cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 
-    - name: Install Dependencies
+    - name: Install CI Tooling
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm install
+
+    - name: Install Project Dependencies
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: npm ci
