@@ -16,7 +16,7 @@ jobs:
   # The first three jobs are calling REUSABLE WORKFLOWS (uses: path/to/file.yml)
   # This is fine because they don't have "steps"
   ci:
-    name: Fake CI Check
+    name: CI Check
     uses: algorandfoundation/algokit-shared-config/.github/actions/node-ci@ref/consistency-ref-implementation
     with:
       working-directory: "."
