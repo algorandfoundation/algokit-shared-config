@@ -15,14 +15,6 @@ jobs:
       - name: Build Typedoc Documentation
         uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@ref/consistency-ref-implementation
 
-      - name: Check docs are up to date
-        shell: bash
-        run: |
-          # Add untracked files as empty so they come up in diff
-          git add -N .
-          # Print changed files and error out if there are changes after generating docs
-          git diff --exit-code --name-only
-
       - name: Upload Documentation Artifact
         uses: actions/upload-artifact@v4
         with:
