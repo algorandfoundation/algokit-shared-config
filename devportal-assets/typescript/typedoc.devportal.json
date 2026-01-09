@@ -1,0 +1,24 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "cleanOutputDir": true,
+  "entryPointStrategy": "packages",
+  "entryPoints": [],
+  "enumMembersFormat": "table",
+  "exclude": ["src/**/*.spec.ts", "tests/**/*.*", "examples/**/*.*"],
+  "gitRevision": "main",
+  "hideBreadcrumbs": true,
+  "highlightLanguages": ["typescript", "python", "json", "bash", "js", "yaml"],
+  "includeHierarchySummary": false,
+  "indexFormat": "table",
+  "outputFileStrategy": "modules",
+  "outputs": [{ "name": "markdown", "path": ".devportal/api" }],
+  "parametersFormat": "table",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-plugin-frontmatter",
+    "./frontmatter-plugin.mjs"
+  ],
+  "propertiesFormat": "table",
+  "tsconfig": "tsconfig.build.json",
+  "typeDeclarationFormat": "table"
+}
