@@ -17,10 +17,14 @@ import { execSync } from 'child_process';
 function detectDocGenerator(docsPath) {
   const cwd = process.cwd();
 
-  // Check for Sphinx
+  // Check for Sphinx - look in common locations for conf.py
   const sphinxConfPaths = [
     join(docsPath, 'conf.py'),
-    join(cwd, 'conf.py')
+    join(cwd, 'conf.py'),
+    join(cwd, 'docs', 'conf.py'),
+    join(cwd, 'doc', 'conf.py'),
+    join(cwd, 'source', 'conf.py'),
+    join(cwd, 'docs', 'source', 'conf.py')
   ];
 
   for (const confPath of sphinxConfPaths) {
