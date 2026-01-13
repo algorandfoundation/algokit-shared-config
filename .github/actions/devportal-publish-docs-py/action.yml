@@ -56,7 +56,7 @@ runs:
 
     - name: Publish docs
       id: publish
-      uses: algorandfoundation/algokit-shared-config/.github/actions/devportal-publish-docs-core@separate-actions
+      uses: algorandfoundation/algokit-shared-config/.github/actions/devportal-publish-docs-core@chore/separate-actions
       with:
         docs_path: ${{ inputs.docs_path }}
         docs_branch: ${{ inputs.docs_branch }}
