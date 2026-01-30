@@ -1,0 +1,147 @@
+name: Pull Request
+
+on:
+  workflow_call:
+    inputs:
+      audit-level:
+        description: "Minimum vulnerability severity to fail (Node.js only): low, moderate, high, critical"
+        required: false
+        type: string
+        default: "moderate"
+      build-command:
+        description: Build command to run
+        required: false
+        type: string
+        default: ""
+      lint-command:
+        description: Custom lint command (auto-detected if empty)
+        required: false
+        type: string
+        default: ""
+      node-version:
+        description: Node.js version
+        required: false
+        type: string
+        default: "22"
+      pre-test-script:
+        description: Script to run before tests
+        required: false
+        type: string
+        default: ""
+      project-type:
+        description: "Project type: node or python"
+        required: true
+        type: string
+      python-version:
+        description: Python version
+        required: false
+        type: string
+        default: "3.12"
+      skip-audit:
+        description: Skip security audit step
+        required: false
+        type: boolean
+        default: false
+      skip-build:
+        description: Skip build step
+        required: false
+        type: boolean
+        default: false
+      skip-lint:
+        description: Skip linting step
+        required: false
+        type: boolean
+        default: false
+      skip-commit-lint:
+        description: Skip commit lint step
+        required: false
+        type: boolean
+        default: false
+      skip-test:
+        description: Skip test step
+        required: false
+        type: boolean
+        default: false
+      test-command:
+        description: Custom test command (auto-detected if empty)
+        required: false
+        type: string
+        default: ""
+      working-directory:
+        description: Working directory
+        required: false
+        type: string
+        default: "."
+    secrets:
+      NPM_TOKEN:
+        required: false
+
+permissions:
+  contents: read # Required to checkout code and run CI
+
+jobs:
+  validate:
+    name: Validate Inputs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate project-type
+        if: inputs.project-type != 'node' && inputs.project-type != 'python'
+        run: |
+          echo "::error::project-type must be 'node' or 'python', got '${{ inputs.project-type }}'"
+          exit 1
+
+      - name: Validate audit-level
+        if: inputs.audit-level != 'low' && inputs.audit-level != 'moderate' && inputs.audit-level != 'high' && inputs.audit-level != 'critical'
+        run: |
+          echo "::error::audit-level must be 'low', 'moderate', 'high', or 'critical', got '${{ inputs.audit-level }}'"
+          exit 1
+
+  ci:
+    name: CI
+    needs: validate
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/ci.yml@feat/pr-workflow
+    with:
+      audit-level: ${{ inputs.audit-level }}
+      build-command: ${{ inputs.build-command }}
+      lint-command: ${{ inputs.lint-command }}
+      node-version: ${{ inputs.node-version }}
+      pre-test-script: ${{ inputs.pre-test-script }}
+      project-type: ${{ inputs.project-type }}
+      python-version: ${{ inputs.python-version }}
+      skip-audit: ${{ inputs.skip-audit }}
+      skip-build: ${{ inputs.skip-build }}
+      skip-lint: ${{ inputs.skip-lint }}
+      skip-test: ${{ inputs.skip-test }}
+      test-command: ${{ inputs.test-command }}
+      working-directory: ${{ inputs.working-directory }}
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  commit-lint:
+    name: Commit Lint
+    if: ${{ !inputs.skip-commit-lint }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Checkout algokit-shared-config
+        uses: actions/checkout@v6.0.1
+        with:
+          repository: algorandfoundation/algokit-shared-config
+          path: .algokit-shared-config
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.2.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Run Commitlint
+        uses: ./.algokit-shared-config/actions/utils/commitlint
+        with:
+          from: ${{ github.event.pull_request.base.sha }}
+          to: ${{ github.event.pull_request.head.sha }}
