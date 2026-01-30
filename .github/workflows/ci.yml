@@ -103,7 +103,7 @@ jobs:
 
       - name: Run Node CI
         if: inputs.project-type == 'node'
-        uses: algorandfoundation/algokit-shared-config/actions/ci/node@main
+        uses: algorandfoundation/algokit-shared-config/actions/ci/node@feat/pr-workflow
         with:
           audit-level: ${{ inputs.audit-level }}
           build-command: ${{ inputs.build-command }}
@@ -120,7 +120,7 @@ jobs:
 
       - name: Run Python CI
         if: inputs.project-type == 'python'
-        uses: algorandfoundation/algokit-shared-config/actions/ci/python@main
+        uses: algorandfoundation/algokit-shared-config/actions/ci/python@feat/pr-workflow
         with:
           build-command: ${{ inputs.build-command }}
           lint-command: ${{ inputs.lint-command }}
