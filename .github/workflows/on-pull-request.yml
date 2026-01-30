@@ -141,7 +141,7 @@ jobs:
           node-version: ${{ inputs.node-version }}
 
       - name: Run Commitlint
-        uses: ./.algokit-shared-config/actions/utils/commitlint
+        uses: algorandfoundation/algokit-shared-config/actions/utils/commit-lint@feat/pr-workflow
         with:
           from: ${{ github.event.pull_request.base.sha }}
           to: ${{ github.event.pull_request.head.sha }}
