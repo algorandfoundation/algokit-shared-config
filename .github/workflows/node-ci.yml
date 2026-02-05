@@ -85,11 +85,6 @@ jobs:
         with:
           version: 9 # or latest
 
-      - name: Configure pnpm store
-        run: |
-          pnpm config set store-dir ~/.pnpm-store
-          mkdir -p ~/.pnpm-store
-
       # setup node + private repo access
       - name: Use Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v6
