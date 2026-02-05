@@ -12,18 +12,18 @@ on:
       lint-script:
         required: false
         type: string
-        default: pnpm run lint --if-present
+        default: pnpm run --if-present lint
       compile-script:
         required: false
         type: string
-        default: pnpm run check-types --if-present
+        default: pnpm run --if-present check-types
       pre-test-script:
         required: false
         type: string
       test-script:
         required: false
         type: string
-        default: pnpm run test --if-present
+        default: pnpm run --if-present test
       test-environment-variables:
         required: false
         type: string
