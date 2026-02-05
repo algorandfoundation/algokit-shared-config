@@ -8,26 +8,26 @@ on:
       working-directory:
         required: false
         type: string
-        default: '.'
+        default: "."
       lint-script:
         required: false
         type: string
-        default: npm run lint --if-present
+        default: pnpm run lint --if-present
       compile-script:
         required: false
         type: string
-        default: npm run check-types --if-present
+        default: pnpm run check-types --if-present
       pre-test-script:
         required: false
         type: string
       test-script:
         required: false
         type: string
-        default: npm run test --if-present
+        default: pnpm run test --if-present
       test-environment-variables:
         required: false
         type: string
-        default: '{}'
+        default: "{}"
       output-test-results:
         required: false
         type: boolean
@@ -35,15 +35,15 @@ on:
       test-results-file-pattern:
         required: false
         type: string
-        default: '**/test-results.xml'
+        default: "**/test-results.xml"
       audit-script:
         required: false
         type: string
-        default: npm audit
+        default: pnpm audit
       build-script:
         required: false
         type: string
-        default: npm run build
+        default: pnpm run build
       run-build:
         required: false
         type: boolean
@@ -79,29 +79,32 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 1. Install pnpm before setting up Node
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # or latest
+
       # setup node + private repo access
       - name: Use Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@makerxstudio'
-          cache: 'npm'
-          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+          cache: "pnpm"
+          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
         run: ${{ inputs.pre-run-script }}
 
-      # run npm ci preventing script access to npm auth token
-      - run: npm ci --ignore-scripts
+      # install dependencies
+      - run: pnpm install --frozen-lockfile --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
       # allow scripts to run without npm auth token
-      - run: npm rebuild && npm run prepare --if-present
-
+      - run: pnpm rebuild && pnpm run prepare --if-present
       # run all the CI scripts
-      - name: 'Commit lint'
+      - name: "Commit lint"
         if: ${{ inputs.run-commit-lint }}
         run: ${{ inputs.commit-lint-script }}
 
@@ -118,7 +121,7 @@ jobs:
       - name: Test
         run: ${{ inputs.test-script }}
         env: ${{ fromJson(inputs.test-environment-variables) }}
-      
+
         #Requires permissions.checks: write
       - name: Publish test results
         if: ${{ always() && inputs.output-test-results }}
