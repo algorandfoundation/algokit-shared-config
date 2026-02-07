@@ -24,6 +24,6 @@ jobs:
         shell: bash
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
-          npm run generate:code-docs
+          pnpm run generate:code-docs
           git add -N .
           git diff --exit-code --name-only
