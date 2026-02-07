@@ -23,7 +23,17 @@ jobs:
       - name: Check docs are up to date
         shell: bash
         run: |
+          set -euo pipefail
           pnpm install --frozen-lockfile --ignore-scripts
-          pnpm run generate:code-docs
+          if ! pnpm run generate:code-docs; then
+            echo "Docs generation failed. Recent git status and diff:"
+            git status --short
+            git diff --stat || true
+            exit 1
+          fi
           git add -N .
-          git diff --exit-code --name-only
+          if ! git diff --exit-code --name-only; then
+            echo "Docs are out of date. Changed files:"
+            git diff --name-only
+            exit 1
+          fi
