@@ -10,15 +10,20 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v3
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          node-version: 20.x
+          version: 9
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
 
       - name: Check docs are up to date
         shell: bash
         run: |
-          npm ci --ignore-scripts
+          pnpm install --frozen-lockfile --ignore-scripts
           npm run generate:code-docs
           git add -N .
           git diff --exit-code --name-only

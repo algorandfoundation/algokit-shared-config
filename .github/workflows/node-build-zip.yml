@@ -63,8 +63,23 @@ jobs:
           node-version: ${{ inputs.node-version }}
           registry-url: "https://npm.pkg.github.com"
           scope: "@makerxstudio"
-          cache: "npm"
-          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        if: ${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
@@ -74,18 +89,18 @@ jobs:
       - if: ${{ inputs.static-site }}
         run: sed -n 's/\(${{ inputs.static-site-env-prefix }}_[A-Z0-9_]\+\)=\(.*\)/\1={{\1}}/p' ${{ inputs.sample-env-path }} > .env && cat .env
 
-      # run npm ci preventing script access to npm auth token
-      - run: npm ci --ignore-scripts
+      # run pnpm install preventing script access to npm auth token
+      - run: pnpm install --frozen-lockfile --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
       # allow scripts to run without npm auth token
-      - run: npm rebuild && npm run prepare --if-present
+      - run: pnpm rebuild && pnpm run prepare --if-present
 
       - name: Prepare
-        run: npm run prepare --if-present
+        run: pnpm run prepare --if-present
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
         # CDK infrastructure build calls npm ci on /infrastructure/build, which may fail without NODE_AUTH_TOKEN
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}

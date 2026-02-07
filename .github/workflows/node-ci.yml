@@ -90,8 +90,19 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
-          cache: "pnpm"
-          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        if: ${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
