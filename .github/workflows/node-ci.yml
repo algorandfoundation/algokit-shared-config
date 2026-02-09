@@ -109,7 +109,8 @@ jobs:
         run: ${{ inputs.pre-run-script }}
 
       # install dependencies
-      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm install --frozen-lockfile --ignore-scripts --prod=false
+
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
       # allow scripts to run without npm auth token
