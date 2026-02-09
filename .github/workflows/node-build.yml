@@ -40,39 +40,31 @@ jobs:
         with:
           fetch-depth: 0
 
-      # setup node + private repo access
-      - name: Use Node.js ${{ inputs.node-version }}
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ inputs.node-version }}
-          registry-url: "https://npm.pkg.github.com"
+      # 1. Install pnpm first so setup-node can "see" it
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      - name: Resolve pnpm store path
-        id: pnpm-store
-        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache pnpm store
-        if: ${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) != '' }}
-        uses: actions/cache@v4
+      # 2. Setup Node and handle caching in one block
+      - name: Use Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
         with:
-          path: ${{ steps.pnpm-store.outputs.path }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          node-version: ${{ inputs.node-version }}
+          registry-url: "https://npm.pkg.github.com"
+          cache: "pnpm"
+          # Since you're in a consumer root, this keeps the cache stable
+          cache-dependency-path: "pnpm-lock.yaml"
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
         run: ${{ inputs.pre-run-script }}
 
-      # run pnpm install preventing script access to npm auth token
+      # 3. Install dependencies
       - run: pnpm install --frozen-lockfile --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
-      # allow scripts to run without npm auth token
+
       - run: pnpm rebuild && pnpm run prepare --if-present
 
       - name: Prepare
@@ -80,7 +72,6 @@ jobs:
 
       - name: Build
         run: pnpm run build
-        # CDK infrastructure build calls npm ci on /infrastructure/build, which may fail without NODE_AUTH_TOKEN
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
 

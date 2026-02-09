@@ -68,6 +68,8 @@ jobs:
         with:
           version: 9
 
+      # actions/cache needs a real path; pnpm's store location varies by OS/config,
+      # so resolve it dynamically instead of trying to cache "pnpm".
       - name: Resolve pnpm store path
         id: pnpm-store
         run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
