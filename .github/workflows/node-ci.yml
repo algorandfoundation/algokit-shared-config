@@ -39,7 +39,7 @@ on:
       audit-script:
         required: false
         type: string
-        default: pnpm run audit
+        default: pnpm audit
       build-script:
         required: false
         type: string
