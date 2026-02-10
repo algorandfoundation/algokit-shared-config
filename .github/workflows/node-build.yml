@@ -8,7 +8,7 @@ on:
       working-directory:
         required: false
         type: string
-        default: '.'
+        default: "."
       build-path:
         required: false
         type: string
@@ -45,15 +45,15 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@makerxstudio'
-          cache: 'npm'
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@makerxstudio"
+          cache: "npm"
           cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
         run: ${{ inputs.pre-run-script }}
-        
+
       # run npm ci preventing script access to npm auth token
       - run: npm ci --ignore-scripts
         env:

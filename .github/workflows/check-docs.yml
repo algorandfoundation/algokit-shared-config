@@ -1,26 +1,42 @@
-# File: .github/workflows/publish.yml
-
-name: Publish - Reusable
-
 on:
   workflow_call:
-
-concurrency: release
+    inputs:
+      node-version:
+        required: false
+        type: string
+        default: 18.x
 
 jobs:
   check_docs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+
       - name: Check docs are up to date
         shell: bash
         run: |
-          npm ci --ignore-scripts
-          npm run generate:code-docs
-          # Add untracked files as empty so they come up in diff
+          set -euo pipefail
+          pnpm install --frozen-lockfile 
+          if ! pnpm run generate:code-docs; then
+            echo "Docs generation failed. Recent git status and diff:"
+            git status --short
+            git diff --stat || true
+            exit 1
+          fi
           git add -N .
-          # Print changed files and error out if there are changes after generating docs
-          git diff --exit-code --name-only
+          if ! git diff --exit-code --name-only; then
+            echo "Docs are out of date. Changed files:"
+            git diff --name-only
+            exit 1
+          fi
