@@ -108,7 +108,7 @@ jobs:
         if: ${{ inputs.pre-run-script }}
         run: ${{ inputs.pre-run-script }}
 
-      # install dependencies
+      # install dependenciess
       - run: pnpm install --frozen-lockfile --ignore-scripts --prod=false
 
         env:
