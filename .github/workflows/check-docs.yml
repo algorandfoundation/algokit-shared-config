@@ -22,7 +22,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm install --frozen-lockfile 
           if ! pnpm run generate:code-docs; then
             echo "Docs generation failed. Recent git status and diff:"
             git status --short

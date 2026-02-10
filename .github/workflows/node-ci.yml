@@ -109,7 +109,7 @@ jobs:
         run: ${{ inputs.pre-run-script }}
 
       # install dependenciess
-      - run: pnpm install --frozen-lockfile --ignore-scripts --prod=false
+      - run: pnpm install --frozen-lockfile --prod=false
 
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
