@@ -107,15 +107,14 @@ jobs:
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
         run: ${{ inputs.pre-run-script }}
-
-      # install dependenciess
       - run: pnpm install --frozen-lockfile --prod=false
-
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
-      # allow scripts to run without npm auth token
       - run: pnpm rebuild && pnpm run --if-present prepare
-      # run all the CI scripts
+
+      - name: Audit
+        run: ${{ inputs.audit-script }}
+
       - name: "Commit lint"
         if: ${{ inputs.run-commit-lint }}
         run: ${{ inputs.commit-lint-script }}
@@ -144,9 +143,6 @@ jobs:
           reporter: jest-junit
           output-to: checks
           fail-on-error: false
-
-      - name: Audit
-        run: ${{ inputs.audit-script }}
 
       - name: Build
         if: ${{ inputs.run-build }}
