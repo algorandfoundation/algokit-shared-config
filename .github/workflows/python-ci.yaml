@@ -10,7 +10,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-algokit-python
+      - uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
 
       - name: Check pre-commits
         run: |
@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Python and algokit
-        uses: ./.github/actions/setup-algokit-python
+        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
 
       - name: pytest + coverage
         shell: bash
