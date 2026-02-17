@@ -1,0 +1,84 @@
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: false
+        type: string
+        default: 22.x
+      pre-release-script:
+        required: false
+        type: string
+    secrets:
+      bot-id:
+        required: true
+      bot-sk:
+        required: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/node-ci.yml
+    with:
+      node-version: ${{ inputs.node-version }}
+
+  build:
+    needs: ci
+    uses: ./.github/workflows/node-build-zip.yml
+    with:
+      node-version: ${{ inputs.node-version }}
+      artifact-name: package
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Download package artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}
+          path: .
+
+      - name: Unzip package artifact
+        run: unzip -o "${{ needs.build.outputs.artifact-name }}.zip" -d .
+
+      - name: Create bot token
+        id: bot-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.bot-id }}
+          private-key: ${{ secrets.bot-sk }}
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ steps.bot-token.outputs.token }}
+          clean: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prod=false
+
+      - name: Pre-release
+        if: ${{ inputs.pre-release-script }}
+        run: ${{ inputs.pre-release-script }}
+
+      - name: Configure Git user
+        run: |
+          git config user.name "${{ steps.bot-token.outputs.app-slug }}[bot]"
+          git config user.email "${{ steps.bot-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+
+      - name: Semantic release
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ steps.bot-token.outputs.token }}
