@@ -1,5 +1,16 @@
 name: Setup Algokit Python Environment
 description: An action to setup the python environment with algokit and uv
+
+inputs:
+  python-version:
+    description: "Python version to install"
+    required: false
+    default: "3.12"
+  install-algokit:
+    description: "Whether to install algokit via pipx and start localnet"
+    required: false
+    default: "true"
+
 runs:
   using: composite
   steps:
@@ -9,16 +20,18 @@ runs:
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: "3.12"
+        python-version: ${{ inputs.python-version }}
 
     - name: Install dependencies
       shell: bash
       run: uv sync
 
     - name: Install algokit
+      if: inputs.install-algokit == 'true'
       shell: bash
       run: pipx install algokit
 
     - name: Run localnet
+      if: inputs.install-algokit == 'true'
       shell: bash
       run: algokit localnet start
