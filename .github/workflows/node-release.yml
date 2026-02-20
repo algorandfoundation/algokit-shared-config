@@ -1,84 +1,55 @@
 on:
   workflow_call:
-    inputs:
-      node-version:
-        required: false
-        type: string
-        default: 22.x
-      pre-release-script:
-        required: false
-        type: string
     secrets:
-      bot-id:
+      BOT_ID:
         required: true
-      bot-sk:
+      BOT_SK:
+        required: true
+      NPM_TOKEN:
         required: true
 
 jobs:
-  ci:
-    uses: ./.github/workflows/node-ci.yml
-    with:
-      node-version: ${{ inputs.node-version }}
-
-  build:
-    needs: ci
-    uses: ./.github/workflows/node-build-zip.yml
-    with:
-      node-version: ${{ inputs.node-version }}
-      artifact-name: package
-
   release:
-    needs: build
+    name: Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
     steps:
-      - name: Download package artifact
-        uses: actions/download-artifact@v5
+      - name: Generate bot token
+        uses: actions/create-github-app-token@v1
+        id: app_token
         with:
-          name: ${{ needs.build.outputs.artifact-name }}
-          path: .
+          app_id: ${{ secrets.BOT_ID }}
+          private_key: ${{ secrets.BOT_SK }}
 
-      - name: Unzip package artifact
-        run: unzip -o "${{ needs.build.outputs.artifact-name }}.zip" -d .
-
-      - name: Create bot token
-        id: bot-token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ secrets.bot-id }}
-          private-key: ${{ secrets.bot-sk }}
-
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ steps.bot-token.outputs.token }}
-          clean: false
+          token: ${{ steps.app_token.outputs.token }}
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Set Git user as GitHub actions
+        run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
 
-      - name: Use Node.js ${{ inputs.node-version }}
-        uses: actions/setup-node@v6
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: 22.x
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --prod=false
+      - name: Download built package
+        uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: artifacts
 
-      - name: Pre-release
-        if: ${{ inputs.pre-release-script }}
-        run: ${{ inputs.pre-release-script }}
-
-      - name: Configure Git user
+      - name: Unzip package
+        shell: bash
         run: |
-          git config user.name "${{ steps.bot-token.outputs.app-slug }}[bot]"
-          git config user.email "${{ steps.bot-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          mkdir -p dist
+          unzip -q "artifacts/package.zip" -d dist
 
-      - name: Semantic release
+      - name: Install dependencies to get semantic release components and plugins
+        run: npm ci --ignore-scripts
+
+      - name: "Semantic release"
         run: npx semantic-release
         env:
-          GITHUB_TOKEN: ${{ steps.bot-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
