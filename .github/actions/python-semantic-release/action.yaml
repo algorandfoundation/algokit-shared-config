@@ -9,6 +9,18 @@ inputs:
     description: "Whether this is a production release"
     required: false
     default: "false"
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.12"
+  git_user_name:
+    description: "Git user name for release commits"
+    required: false
+    default: "engineering-ci[bot]"
+  git_user_email:
+    description: "Git user email for release commits"
+    required: false
+    default: "179917785+engineering-ci[bot]@users.noreply.github.com"
 
 outputs:
   released:
@@ -24,30 +36,49 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Setup Python and uv
+      uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
+      with:
+        python-version: ${{ inputs.python-version }}
+        install-algokit: "false"
+
     - name: Get branch name
       id: get_branch
       shell: bash
       run: echo "branch=${GITHUB_REF#refs/heads/}" >> "$GITHUB_OUTPUT"
 
+    - name: Configure git user
+      shell: bash
+      run: |
+        git config --global user.name "${{ inputs.git_user_name }}"
+        git config --global user.email "${{ inputs.git_user_email }}"
+
     - name: Python Semantic Release - Alpha
       id: release-alpha
       if: steps.get_branch.outputs.branch == 'alpha' && inputs.production_release != 'true'
-      uses: python-semantic-release/python-semantic-release@v10.5.3
-      with:
-        github_token: ${{ inputs.github_token }}
-        prerelease: true
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        uv run semantic-release -v version --as-prerelease --prerelease-token alpha
+        uv run semantic-release publish
 
     - name: Python Semantic Release - Beta (non-prod)
       id: release-beta
       if: steps.get_branch.outputs.branch == 'main' && inputs.production_release != 'true'
-      uses: python-semantic-release/python-semantic-release@v10.5.3
-      with:
-        github_token: ${{ inputs.github_token }}
-        prerelease: true
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        uv run semantic-release -v version --as-prerelease
+        uv run semantic-release publish
 
     - name: Python Semantic Release - Production
       id: release-prod
       if: steps.get_branch.outputs.branch == 'main' && inputs.production_release == 'true'
-      uses: python-semantic-release/python-semantic-release@v10.5.3
-      with:
-        github_token: ${{ inputs.github_token }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: |
+        uv run semantic-release -v version
+        uv run semantic-release publish
