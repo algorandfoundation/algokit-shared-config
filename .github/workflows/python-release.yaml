@@ -1,0 +1,59 @@
+name: Python Release
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: false
+        type: string
+        default: "3.12"
+      production_release:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      BOT_ID:
+        required: true
+      BOT_SK:
+        required: true
+
+jobs:
+  ci:
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/python-ci.yaml@main
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.BOT_ID }}
+          private-key: ${{ secrets.BOT_SK }}
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup Python and uv
+        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
+        with:
+          python-version: ${{ inputs.python-version }}
+          install-algokit: "false"
+
+      - name: Semantic Release
+        id: semantic-release
+        uses: algorandfoundation/algokit-shared-config/.github/actions/python-semantic-release@main
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          production_release: ${{ inputs.production_release }}
+
+      - name: Publish to PyPI
+        if: steps.semantic-release.outputs.released == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
