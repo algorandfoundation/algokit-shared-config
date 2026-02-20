@@ -39,18 +39,13 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Setup Python and uv
-        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
-        with:
-          python-version: ${{ inputs.python-version }}
-          install-algokit: "false"
-
       - name: Semantic Release
         id: semantic-release
         uses: algorandfoundation/algokit-shared-config/.github/actions/python-semantic-release@main
         with:
           github_token: ${{ steps.app-token.outputs.token }}
           production_release: ${{ inputs.production_release }}
+          python-version: ${{ inputs.python-version }}
 
       - name: Publish to PyPI
         if: steps.semantic-release.outputs.released == 'true'
