@@ -1,35 +1,58 @@
-name: "Run typedoc and publish to pages"
+name: Build and Publish Documentation
 
 on:
   workflow_call:
+    inputs:
+      node-version:
+        description: Node.js version to use
+        required: false
+        type: string
+        default: 22.x
+
+permissions:
+  pages: write
+  id-token: write
 
 jobs:
-  build-docs:
+  build_docs:
+    name: Build Documentation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Build Typedoc Documentation
-        uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@main
-      - name: Upload Documentation Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/checkout@v6
         with:
-          name: github-pages-docs
-          path: docs/_html
-          retention-days: 1
+          fetch-depth: 1
 
-  publish-docs:
-    needs: build-docs
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Install root dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Install docs dependencies
+        shell: bash
+        run: npm ci --prefix docs
+
+      - name: Build documentation
+        shell: bash
+        run: npm run docs:build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/dist
+
+  deploy_docs:
+    name: Deploy Documentation
+    needs: build_docs
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download Documentation Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages-docs
-          path: docs/downloaded
-
-      - name: Deploy Documentation
-        uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@main
-        with:
-          artifact_path: docs/downloaded
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
