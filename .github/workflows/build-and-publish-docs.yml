@@ -23,22 +23,23 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
-
-      - name: Install root dependencies
-        shell: bash
-        run: npm ci
+          cache: pnpm
+          cache-dependency-path: docs/pnpm-lock.yaml
 
       - name: Install docs dependencies
         shell: bash
-        run: npm ci --prefix docs
+        run: pnpm --dir docs install --frozen-lockfile
 
       - name: Build documentation
         shell: bash
-        run: npm run docs:build
+        run: pnpm --dir docs run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
