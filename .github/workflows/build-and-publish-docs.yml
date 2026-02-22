@@ -33,13 +33,21 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
+      - name: Fetch root dependencies
+        shell: bash
+        run: pnpm fetch --frozen-lockfile
+
       - name: Install root dependencies
         shell: bash
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --offline
+
+      - name: Fetch docs dependencies
+        shell: bash
+        run: pnpm --dir docs fetch --frozen-lockfile
 
       - name: Install docs dependencies
         shell: bash
-        run: pnpm --dir docs install --frozen-lockfile
+        run: pnpm --dir docs install --frozen-lockfile --offline
 
       - name: Build documentation
         shell: bash
