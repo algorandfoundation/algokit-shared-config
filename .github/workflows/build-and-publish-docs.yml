@@ -35,19 +35,19 @@ jobs:
 
       - name: Fetch root dependencies
         shell: bash
-        run: pnpm fetch --frozen-lockfile
+        run: pnpm fetch --frozen-lockfile --prod=false
 
       - name: Install root dependencies
         shell: bash
-        run: pnpm install --frozen-lockfile --offline
+        run: pnpm install --frozen-lockfile --prod=false --offline
 
       - name: Fetch docs dependencies
         shell: bash
-        run: pnpm --dir docs fetch --frozen-lockfile
+        run: pnpm --dir docs fetch --frozen-lockfile --prod=false
 
       - name: Install docs dependencies
         shell: bash
-        run: pnpm --dir docs install --frozen-lockfile --offline
+        run: pnpm --dir docs install --frozen-lockfile --prod=false --offline
 
       - name: Build documentation
         shell: bash

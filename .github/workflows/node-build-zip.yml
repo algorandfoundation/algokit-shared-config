@@ -74,10 +74,10 @@ jobs:
       - if: ${{ inputs.static-site }}
         run: sed -n 's/\(${{ inputs.static-site-env-prefix }}_[A-Z0-9_]\+\)=\(.*\)/\1={{\1}}/p' ${{ inputs.sample-env-path }} > .env && cat .env
 
-      - run: pnpm fetch --frozen-lockfile
+      - run: pnpm fetch --frozen-lockfile --prod=false
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
-      - run: pnpm install --frozen-lockfile --ignore-scripts --offline
+      - run: pnpm install --frozen-lockfile --prod=false --ignore-scripts --offline
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
       - run: pnpm rebuild && pnpm run --if-present prepare
