@@ -64,19 +64,8 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           registry-url: 'https://npm.pkg.github.com'
-
-      - name: Resolve pnpm store path
-        id: pnpm-store
-        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache pnpm store
-        if: ${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) != '' }}
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-store.outputs.path }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          cache: pnpm
+          cache-dependency-path: ${{ format('{0}/pnpm-lock.yaml', inputs.working-directory) }}
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
@@ -85,7 +74,10 @@ jobs:
       - if: ${{ inputs.static-site }}
         run: sed -n 's/\(${{ inputs.static-site-env-prefix }}_[A-Z0-9_]\+\)=\(.*\)/\1={{\1}}/p' ${{ inputs.sample-env-path }} > .env && cat .env
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm fetch --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
+      - run: pnpm install --frozen-lockfile --ignore-scripts --offline
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
       - run: pnpm rebuild && pnpm run --if-present prepare
