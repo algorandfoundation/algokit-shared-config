@@ -16,7 +16,7 @@ on:
       artifact-name:
         required: false
         type: string
-        default: node-app
+        default: package
       git_user_name:
         description: 'Git user name for release commits'
         required: false
