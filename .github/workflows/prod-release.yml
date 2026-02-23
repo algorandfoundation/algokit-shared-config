@@ -13,6 +13,14 @@ on:
         required: false
         type: string
         default: release
+      git_user_name:
+        description: 'Git user name for release commits'
+        required: false
+        default: 'engineering-ci[bot]'
+      git_user_email:
+        description: 'Git user email for release commits'
+        required: false
+        default: '179917785+engineering-ci[bot]@users.noreply.github.com'
     secrets:
       BOT_ID:
         required: true
@@ -34,13 +42,13 @@ jobs:
           private_key: ${{ secrets.BOT_SK }}
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.app_token.outputs.token }}
 
       - name: Set Git user as GitHub actions
-        run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
+        run: git config --global user.email "${{ inputs.git_user_email }}" && git config --global user.name "${{ inputs.git_user_name }}"
 
       - name: Merge source -> release
         uses: devmasx/merge-branch@854d3ac71ed1e9deb668e0074781b81fdd6e771f

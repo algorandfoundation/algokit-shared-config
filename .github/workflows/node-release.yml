@@ -13,6 +13,18 @@ on:
         required: false
         type: string
         default: 22.x
+      artifact-name:
+        required: false
+        type: string
+        default: node-app
+      git_user_name:
+        description: 'Git user name for release commits'
+        required: false
+        default: 'engineering-ci[bot]'
+      git_user_email:
+        description: 'Git user email for release commits'
+        required: false
+        default: '179917785+engineering-ci[bot]@users.noreply.github.com'
 
 jobs:
   release:
@@ -26,14 +38,16 @@ jobs:
           app_id: ${{ secrets.BOT_ID }}
           private_key: ${{ secrets.BOT_SK }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.app_token.outputs.token }}
 
-      - name: Set Git user as GitHub actions
-        run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
-
+      - name: Configure git user
+        shell: bash
+        run: |
+          git config --global user.name "${{ inputs.git_user_name }}"
+          git config --global user.email "${{ inputs.git_user_email }}"
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
@@ -46,14 +60,14 @@ jobs:
       - name: Download built package
         uses: actions/download-artifact@v4
         with:
-          name: package
+          name: ${{ inputs.artifact-name }}
           path: artifacts
 
       - name: Unzip package
         shell: bash
         run: |
           mkdir -p dist
-          unzip -q "artifacts/package.zip" -d dist
+          unzip -q "artifacts/${{ inputs.artifact-name }}.zip" -d dist
 
       - name: Install dependencies to get semantic release components and plugins
         run: pnpm fetch --frozen-lockfile --prod=false

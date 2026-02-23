@@ -23,7 +23,9 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            docs/pnpm-lock.yaml
 
       - name: Fetch root dependencies
         shell: bash
@@ -45,7 +47,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if ! pnpm run generate:code-docs; then
+          if ! pnpm run docs:build; then
             echo "Docs generation failed. Recent git status and diff:"
             git status --short
             git diff --stat || true

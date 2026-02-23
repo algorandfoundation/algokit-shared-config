@@ -29,7 +29,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Setup Node.js
+    - name: Use Node.js ${{ inputs.node-version }}
       uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.node_version }}
@@ -61,7 +61,7 @@ runs:
         echo "Publishing to: $target (update_latest: $update_latest)"
 
     - name: Checkout docs branch
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ inputs.docs_branch }}
         path: docs-branch
