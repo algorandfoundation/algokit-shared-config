@@ -20,10 +20,12 @@ on:
       git_user_name:
         description: 'Git user name for release commits'
         required: false
+        type: string
         default: 'engineering-ci[bot]'
       git_user_email:
         description: 'Git user email for release commits'
         required: false
+        type: string
         default: '179917785+engineering-ci[bot]@users.noreply.github.com'
 
 jobs:
