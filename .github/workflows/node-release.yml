@@ -28,10 +28,15 @@ jobs:
       - name: Set Git user as GitHub actions
         run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
 
-      - name: Use Node.js 22.x
-        uses: actions/setup-node@v3
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: ${{ format('{0}/pnpm-lock.yaml', inputs.working-directory) }}
 
       - name: Download built package
         uses: actions/download-artifact@v4
@@ -46,9 +51,12 @@ jobs:
           unzip -q "artifacts/package.zip" -d dist
 
       - name: Install dependencies to get semantic release components and plugins
-        run: npm ci --ignore-scripts
+        run: pnpm fetch --frozen-lockfile --prod=false
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+      - run: pnpm install --frozen-lockfile --prod=false --offline
 
-      - name: "Semantic release"
+      - name: 'Semantic release'
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
