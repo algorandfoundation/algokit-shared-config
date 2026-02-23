@@ -1,0 +1,60 @@
+name: Prod Publish
+
+on:
+  workflow_call:
+    inputs:
+      source-branch:
+        description: Branch to promote from
+        required: false
+        type: string
+        default: main
+      release-branch:
+        description: Release branch to promote to/from
+        required: false
+        type: string
+        default: release
+    secrets:
+      BOT_ID:
+        required: true
+      BOT_SK:
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  prod_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate bot token
+        uses: actions/create-github-app-token@v1
+        id: app_token
+        with:
+          app_id: ${{ secrets.BOT_ID }}
+          private_key: ${{ secrets.BOT_SK }}
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app_token.outputs.token }}
+
+      - name: Set Git user as GitHub actions
+        run: git config --global user.email "179917785+engineering-ci[bot]@users.noreply.github.com" && git config --global user.name "engineering-ci[bot]"
+
+      - name: Merge source -> release
+        uses: devmasx/merge-branch@854d3ac71ed1e9deb668e0074781b81fdd6e771f
+        with:
+          type: now
+          from_branch: ${{ inputs.source-branch }}
+          target_branch: ${{ inputs.release-branch }}
+          github_token: ${{ steps.app_token.outputs.token }}
+
+      - name: Merge release -> source
+        uses: devmasx/merge-branch@854d3ac71ed1e9deb668e0074781b81fdd6e771f
+        with:
+          type: now
+          from_branch: ${{ inputs.release-branch }}
+          target_branch: ${{ inputs.source-branch }}
+          message: Merge release back to source to get version increment [no ci]
+          github_token: ${{ steps.app_token.outputs.token }}
