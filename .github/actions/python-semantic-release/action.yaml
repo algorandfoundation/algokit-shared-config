@@ -25,13 +25,13 @@ inputs:
 outputs:
   released:
     description: "Whether a release was created"
-    value: ${{ steps.release-alpha.outputs.released == 'true' || steps.release-beta.outputs.released == 'true' || steps.release-prod.outputs.released == 'true' }}
+    value: ${{ steps.publish.outputs.released }}
   version:
     description: "Released version string (empty if no release)"
-    value: ${{ steps.release-alpha.outputs.version || steps.release-beta.outputs.version || steps.release-prod.outputs.version }}
+    value: ${{ steps.publish.outputs.version }}
   tag:
     description: "Git tag created (empty if no release)"
-    value: ${{ steps.release-alpha.outputs.tag || steps.release-beta.outputs.tag || steps.release-prod.outputs.tag }}
+    value: ${{ steps.publish.outputs.tag }}
 
 runs:
   using: composite
@@ -42,43 +42,44 @@ runs:
         python-version: ${{ inputs.python-version }}
         install-algokit: "false"
 
-    - name: Get branch name
-      id: get_branch
-      shell: bash
-      run: echo "branch=${GITHUB_REF#refs/heads/}" >> "$GITHUB_OUTPUT"
-
     - name: Configure git user
       shell: bash
       run: |
         git config --global user.name "${{ inputs.git_user_name }}"
         git config --global user.email "${{ inputs.git_user_email }}"
 
-    - name: Python Semantic Release - Alpha
-      id: release-alpha
-      if: steps.get_branch.outputs.branch == 'alpha' && inputs.production_release != 'true'
+    - name: Semantic Release Version
+      id: version
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        uv run semantic-release -v version --as-prerelease --prerelease-token alpha
-        uv run semantic-release publish
+        BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        echo "before_tag=$BEFORE_TAG" >> "$GITHUB_OUTPUT"
 
-    - name: Python Semantic Release - Beta (non-prod)
-      id: release-beta
-      if: steps.get_branch.outputs.branch == 'main' && inputs.production_release != 'true'
-      shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-      run: |
-        uv run semantic-release -v version --as-prerelease
-        uv run semantic-release publish
+        BRANCH="${GITHUB_REF#refs/heads/}"
+        if [ "$BRANCH" = "alpha" ] && [ "${{ inputs.production_release }}" != "true" ]; then
+          uv run semantic-release -v version --as-prerelease --prerelease-token alpha
+        elif [ "$BRANCH" = "main" ] && [ "${{ inputs.production_release }}" != "true" ]; then
+          uv run semantic-release -v version --as-prerelease
+        elif [ "$BRANCH" = "main" ] && [ "${{ inputs.production_release }}" == "true" ]; then
+          uv run semantic-release -v version
+        fi
 
-    - name: Python Semantic Release - Production
-      id: release-prod
-      if: steps.get_branch.outputs.branch == 'main' && inputs.production_release == 'true'
+    - name: Check Release and Publish
+      id: publish
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        uv run semantic-release -v version
-        uv run semantic-release publish
+        BEFORE_TAG="${{ steps.version.outputs.before_tag }}"
+        AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+        if [ "$BEFORE_TAG" != "$AFTER_TAG" ]; then
+          echo "released=true" >> "$GITHUB_OUTPUT"
+          echo "version=${AFTER_TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "tag=$AFTER_TAG" >> "$GITHUB_OUTPUT"
+          uv run semantic-release publish
+        else
+          echo "released=false" >> "$GITHUB_OUTPUT"
+        fi
