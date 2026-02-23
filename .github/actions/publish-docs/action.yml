@@ -1,70 +1,20 @@
-name: "Publish Documentation"
-description: "Builds and uploads documentation artifacts to GitHub Pages for deployment."
+name: 'Publish Documentation'
+description: 'A composite action to upload and deploy documentation artifacts to GitHub Pages.'
 
 inputs:
   artifact_path:
-    description: "Optional explicit path to docs artifacts. If omitted, path is derived from deployment-type."
-    required: false
-    default: ""
-  deployment-type:
-    description: "Documentation deployment type. `release` is intended for Starlight docs in docs/dist."
-    required: false
-    default: release
-  docs-path:
-    description: "Path to the docs project root."
-    required: false
-    default: docs
-  deploy:
-    description: "Whether to run actions/deploy-pages in this action. Set false when deployment is a separate workflow step."
-    required: false
-    default: "true"
+    description: 'The path to the documentation artifact to publish (e.g., docs/_html)'
+    required: true
+    type: string
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: Install root dependencies
-      shell: bash
-      run: npm ci
-
-    - name: Install docs dependencies
-      shell: bash
-      run: npm ci --prefix "${{ inputs.docs-path }}"
-
-    - name: Build documentation
-      shell: bash
-      run: npm run docs:build
-
-    - name: Resolve docs artifact path
-      id: resolve_artifact_path
-      shell: bash
-      run: |
-        set -euo pipefail
-        artifact_path="${{ inputs.artifact_path }}"
-
-        if [[ -z "$artifact_path" ]]; then
-          case "${{ inputs.deployment-type }}" in
-            release)
-              artifact_path="${{ inputs.docs-path }}/dist"
-              ;;
-            *)
-              artifact_path="${{ inputs.docs-path }}/dist"
-              ;;
-          esac
-        fi
-
-        if [[ ! -d "$artifact_path" ]]; then
-          echo "Documentation artifact path does not exist: $artifact_path" >&2
-          exit 1
-        fi
-
-        echo "path=$artifact_path" >> "$GITHUB_OUTPUT"
-
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ${{ steps.resolve_artifact_path.outputs.path }}
+        path: ${{ inputs.artifact_path }}
 
     - name: Deploy to GitHub Pages
-      if: ${{ inputs.deploy == 'true' }}
       id: deployment
       uses: actions/deploy-pages@v4

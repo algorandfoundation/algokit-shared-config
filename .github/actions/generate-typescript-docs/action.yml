@@ -1,8 +1,8 @@
-name: "Build Typedoc Documentation"
-description: "Checks out code, installs dependencies, and runs the documentation build command."
+name: 'Build Typedoc Documentation'
+description: 'Checks out code, installs dependencies, and runs the documentation build command.'
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Checkout source code
       uses: actions/checkout@v4
