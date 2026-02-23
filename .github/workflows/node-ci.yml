@@ -60,7 +60,7 @@ on:
         required: false
         type: string
     secrets:
-      NPM_TOKEN:
+      npm-auth-token:
         description: NPM auth token (don't pass in on a PR build on a public repository)
         required: false
 
@@ -87,17 +87,16 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           cache: pnpm
-          cache-dependency-path: ${{ format('{0}/pnpm-lock.yaml', inputs.working-directory) }}
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
         run: ${{ inputs.pre-run-script }}
       - run: pnpm fetch --frozen-lockfile --prod=false
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
       - run: pnpm install --frozen-lockfile --prod=false --offline
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
       - run: pnpm rebuild && pnpm run --if-present prepare
 
       - name: Audit
@@ -135,4 +134,4 @@ jobs:
         if: ${{ inputs.run-build }}
         run: ${{ inputs.build-script }}
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
