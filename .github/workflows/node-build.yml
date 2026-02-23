@@ -45,8 +45,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@makerxstudio'
+          scope: '@algorandfoundation'
           cache: 'npm'
           cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 

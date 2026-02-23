@@ -63,7 +63,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
-          registry-url: 'https://npm.pkg.github.com'
           cache: pnpm
           cache-dependency-path: ${{ format('{0}/pnpm-lock.yaml', inputs.working-directory) }}
 
