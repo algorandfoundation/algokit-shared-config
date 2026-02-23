@@ -7,6 +7,12 @@ on:
         required: true
       NPM_TOKEN:
         required: true
+    inputs:
+      node-version:
+        description: Node.js version to use
+        required: false
+        type: string
+        default: 22.x
 
 jobs:
   release:
