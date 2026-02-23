@@ -22,12 +22,23 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            docs/pnpm-lock.yaml
 
       - name: Check docs are up to date
         shell: bash
         run: |
           set -euo pipefail
-          pnpm install --frozen-lockfile 
+          pnpm fetch --frozen-lockfile --prod=false
+          pnpm install --frozen-lockfile --prod=false --offline
+
+          if [ -f docs/package.json ]; then
+            pnpm --dir docs fetch --frozen-lockfile --prod=false
+            pnpm --dir docs install --frozen-lockfile --prod=false --offline
+          fi
+
           if ! pnpm run generate:code-docs; then
             echo "Docs generation failed. Recent git status and diff:"
             git status --short
