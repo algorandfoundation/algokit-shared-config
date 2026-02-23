@@ -3,15 +3,15 @@ description: Publishes documentation to a dedicated docs branch for consumption 
 
 inputs:
   docs_path:
-    description: "Location relative to the repo root of the docs folder"
+    description: 'Location relative to the repo root of the docs folder'
     required: false
-    default: "docs"
+    default: 'docs'
   docs_branch:
-    description: "Name of the branch to publish the docs to"
+    description: 'Name of the branch to publish the docs to'
     required: false
-    default: "docs-dist"
+    default: 'docs-dist'
   github_token:
-    description: "GitHub token for publishing to docs branch"
+    description: 'GitHub token for publishing to docs branch'
     required: true
 
 outputs:
@@ -19,7 +19,7 @@ outputs:
     description: "The version target that was published (e.g., 'latest' or 'v1.2.3')"
     value: ${{ steps.docs_target.outputs.target }}
   update_latest:
-    description: "Whether the latest folder was updated"
+    description: 'Whether the latest folder was updated'
     value: ${{ steps.docs_target.outputs.update_latest }}
 
 runs:
@@ -28,7 +28,7 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22.x
 
     - name: Generate manifest.json
       shell: bash
