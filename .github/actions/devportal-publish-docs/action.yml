@@ -13,6 +13,10 @@ inputs:
   github_token:
     description: 'GitHub token for publishing to docs branch'
     required: true
+  node_version:
+    description: 'Node.js version to use for generating manifest'
+    required: false
+    default: '22.x'
 
 outputs:
   docs_target:
@@ -26,9 +30,9 @@ runs:
   using: composite
   steps:
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
-        node-version: 22.x
+        node-version: ${{ inputs.node_version }}
 
     - name: Generate manifest.json
       shell: bash
