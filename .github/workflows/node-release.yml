@@ -27,6 +27,9 @@ on:
         required: false
         type: string
         default: '179917785+engineering-ci[bot]@users.noreply.github.com'
+permissions:
+  contents: write
+  id-token: write
 
 jobs:
   release:

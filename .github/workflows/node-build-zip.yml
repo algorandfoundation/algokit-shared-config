@@ -33,9 +33,6 @@ on:
         type: string
         default: .env.sample
     secrets:
-      NPM_TOKEN:
-        description: NPM auth token (optional, GITHUB_TOKEN is used by default)
-        required: false
     outputs:
       artifact-name:
         description: Name of the artifact created by this workflow
@@ -77,8 +74,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm install --frozen-lockfile --prod=false --ignore-scripts --offline
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN  }}
       - run: pnpm rebuild && pnpm run --if-present prepare
 
       - name: Build
