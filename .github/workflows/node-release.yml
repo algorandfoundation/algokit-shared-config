@@ -76,12 +76,9 @@ jobs:
 
       - name: Install dependencies to get semantic release components and plugins
         run: pnpm fetch --frozen-lockfile --prod=false
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: pnpm install --frozen-lockfile --prod=false --offline
 
       - name: Semantic release
         run: npx semantic-release --dry-run
         env:
           GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
