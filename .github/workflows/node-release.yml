@@ -5,8 +5,6 @@ on:
         required: true
       BOT_SK:
         required: true
-      NPM_TOKEN:
-        required: true
     inputs:
       node-version:
         description: Node.js version to use
