@@ -32,7 +32,6 @@ on:
         required: false
         type: string
         default: .env.sample
-    secrets:
     outputs:
       artifact-name:
         description: Name of the artifact created by this workflow
