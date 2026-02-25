@@ -7,6 +7,10 @@ on:
         required: false
         type: string
         default: "3.12"
+      working-directory:
+        required: false
+        type: string
+        default: "."
       production_release:
         required: false
         type: boolean
@@ -19,7 +23,9 @@ on:
 
 jobs:
   ci:
-    uses: algorandfoundation/algokit-shared-config/.github/workflows/python-ci.yaml@main
+    uses: algorandfoundation/algokit-shared-config/.github/workflows/python-ci.yaml@feat/python-release-workflow
+    with:
+      working-directory: ${{ inputs.working-directory }}
 
   release:
     needs: ci
@@ -41,11 +47,12 @@ jobs:
 
       - name: Semantic Release
         id: semantic-release
-        uses: algorandfoundation/algokit-shared-config/.github/actions/python-semantic-release@main
+        uses: algorandfoundation/algokit-shared-config/.github/actions/python-semantic-release@feat/python-release-workflow
         with:
           github_token: ${{ steps.app-token.outputs.token }}
           production_release: ${{ inputs.production_release }}
           python-version: ${{ inputs.python-version }}
+          working-directory: ${{ inputs.working-directory }}
 
       - name: Publish to PyPI
         if: steps.semantic-release.outputs.released == 'true'

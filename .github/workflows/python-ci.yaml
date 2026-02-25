@@ -2,15 +2,25 @@ name: Python CI
 
 on:
   workflow_call:
+    inputs:
+      working-directory:
+        required: false
+        type: string
+        default: "."
 
 jobs:
   check-python:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v6
 
-      - uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
+      - uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@feat/python-release-workflow
+        with:
+          working-directory: ${{ inputs.working-directory }}
 
       - name: Check pre-commits
         run: |
@@ -29,12 +39,17 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v6
 
       - name: Setup Python and algokit
-        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
+        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@feat/python-release-workflow
+        with:
+          working-directory: ${{ inputs.working-directory }}
 
       - name: pytest + coverage
         shell: bash

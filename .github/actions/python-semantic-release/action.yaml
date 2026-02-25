@@ -21,6 +21,10 @@ inputs:
     description: "Git user email for release commits"
     required: false
     default: "179917785+engineering-ci[bot]@users.noreply.github.com"
+  working-directory:
+    description: "Working directory for the project"
+    required: false
+    default: "."
 
 outputs:
   released:
@@ -37,10 +41,11 @@ runs:
   using: composite
   steps:
     - name: Setup Python and uv
-      uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
+      uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@feat/python-release-workflow
       with:
         python-version: ${{ inputs.python-version }}
         install-algokit: "false"
+        working-directory: ${{ inputs.working-directory }}
 
     - name: Configure git user
       shell: bash
@@ -51,6 +56,7 @@ runs:
     - name: Semantic Release Version
       id: version
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
@@ -69,6 +75,7 @@ runs:
     - name: Check Release and Publish
       id: publish
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
