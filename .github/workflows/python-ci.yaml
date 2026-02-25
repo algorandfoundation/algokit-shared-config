@@ -7,6 +7,10 @@ on:
         required: false
         type: string
         default: "."
+      install-algokit:
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   check-python:
@@ -21,6 +25,7 @@ jobs:
       - uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@feat/python-release-workflow
         with:
           working-directory: ${{ inputs.working-directory }}
+          install-algokit: ${{ inputs.install-algokit }}
 
       - name: Check pre-commits
         run: |
@@ -50,6 +55,7 @@ jobs:
         uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@feat/python-release-workflow
         with:
           working-directory: ${{ inputs.working-directory }}
+          install-algokit: ${{ inputs.install-algokit }}
 
       - name: pytest + coverage
         shell: bash
