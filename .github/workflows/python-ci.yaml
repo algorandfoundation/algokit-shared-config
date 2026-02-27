@@ -69,5 +69,5 @@ jobs:
         continue-on-error: true
         uses: MishaKav/pytest-coverage-comment@v1.2.0
         with:
-          pytest-coverage-path: ./pytest-coverage.txt
-          junitxml-path: ./pytest-junit.xml
+          pytest-coverage-path: ${{ inputs.working-directory }}/pytest-coverage.txt
+          junitxml-path: ${{ inputs.working-directory }}/pytest-junit.xml
