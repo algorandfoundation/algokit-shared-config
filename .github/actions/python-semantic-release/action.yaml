@@ -33,37 +33,59 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+
+    - name: Configure git
+      shell: bash
+      run: |
+        git config user.name "${{ inputs.git_user_name }}"
+        git config user.email "${{ inputs.git_user_email }}"
+
     - name: Semantic Release (alpha)
       id: release-alpha
       if: github.ref_name == 'alpha' && inputs.production_release != 'true'
-      uses: python-semantic-release/python-semantic-release@v10.5.3
-      with:
-        github_token: ${{ inputs.github_token }}
-        git_committer_name: ${{ inputs.git_user_name }}
-        git_committer_email: ${{ inputs.git_user_email }}
-        directory: ${{ inputs.working-directory }}
-        build: "false"
-        prerelease: true
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        uv run semantic-release -v version --as-prerelease --prerelease-token alpha
+        AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ "$BEFORE_TAG" != "$AFTER_TAG" ]; then
+          echo "released=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$AFTER_TAG" >> "$GITHUB_OUTPUT"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Semantic Release (beta)
       id: release-beta
       if: github.ref_name == 'main' && inputs.production_release != 'true'
-      uses: python-semantic-release/python-semantic-release@v10.5.3
-      with:
-        github_token: ${{ inputs.github_token }}
-        git_committer_name: ${{ inputs.git_user_name }}
-        git_committer_email: ${{ inputs.git_user_email }}
-        directory: ${{ inputs.working-directory }}
-        build: "false"
-        prerelease: true
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        uv run semantic-release -v version --as-prerelease
+        AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ "$BEFORE_TAG" != "$AFTER_TAG" ]; then
+          echo "released=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$AFTER_TAG" >> "$GITHUB_OUTPUT"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Semantic Release (production)
       id: release-prod
       if: github.ref_name == 'main' && inputs.production_release == 'true'
-      uses: python-semantic-release/python-semantic-release@v10.5.3
-      with:
-        github_token: ${{ inputs.github_token }}
-        git_committer_name: ${{ inputs.git_user_name }}
-        git_committer_email: ${{ inputs.git_user_email }}
-        directory: ${{ inputs.working-directory }}
-        build: "false"
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        uv run semantic-release -v version
+        AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ "$BEFORE_TAG" != "$AFTER_TAG" ]; then
+          echo "released=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$AFTER_TAG" >> "$GITHUB_OUTPUT"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
