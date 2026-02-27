@@ -9,10 +9,6 @@ inputs:
     description: "Whether this is a production release"
     required: false
     default: "false"
-  python-version:
-    description: "Python version to use"
-    required: false
-    default: "3.12"
   git_user_name:
     description: "Git user name for release commits"
     required: false
@@ -29,64 +25,42 @@ inputs:
 outputs:
   released:
     description: "Whether a release was created"
-    value: ${{ steps.publish.outputs.released }}
-  version:
-    description: "Released version string (empty if no release)"
-    value: ${{ steps.publish.outputs.version }}
+    value: ${{ steps.release-alpha.outputs.released == 'true' || steps.release-beta.outputs.released == 'true' || steps.release-prod.outputs.released == 'true' }}
   tag:
     description: "Git tag created (empty if no release)"
-    value: ${{ steps.publish.outputs.tag }}
+    value: ${{ steps.release-alpha.outputs.tag || steps.release-beta.outputs.tag || steps.release-prod.outputs.tag }}
 
 runs:
   using: composite
   steps:
-    - name: Setup Python and uv
-      uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@feat/python-release-workflow
+    - name: Semantic Release (alpha)
+      id: release-alpha
+      if: github.ref_name == 'alpha' && inputs.production_release != 'true'
+      uses: python-semantic-release/python-semantic-release@v10.5.3
       with:
-        python-version: ${{ inputs.python-version }}
-        install-algokit: "false"
-        working-directory: ${{ inputs.working-directory }}
+        github_token: ${{ inputs.github_token }}
+        git_committer_name: ${{ inputs.git_user_name }}
+        git_committer_email: ${{ inputs.git_user_email }}
+        directory: ${{ inputs.working-directory }}
+        prerelease: true
 
-    - name: Configure git user
-      shell: bash
-      run: |
-        git config --global user.name "${{ inputs.git_user_name }}"
-        git config --global user.email "${{ inputs.git_user_email }}"
+    - name: Semantic Release (beta)
+      id: release-beta
+      if: github.ref_name == 'main' && inputs.production_release != 'true'
+      uses: python-semantic-release/python-semantic-release@v10.5.3
+      with:
+        github_token: ${{ inputs.github_token }}
+        git_committer_name: ${{ inputs.git_user_name }}
+        git_committer_email: ${{ inputs.git_user_email }}
+        directory: ${{ inputs.working-directory }}
+        prerelease: true
 
-    - name: Semantic Release Version
-      id: version
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-      run: |
-        BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        echo "before_tag=$BEFORE_TAG" >> "$GITHUB_OUTPUT"
-
-        BRANCH="${GITHUB_REF#refs/heads/}"
-        if [ "$BRANCH" = "alpha" ] && [ "${{ inputs.production_release }}" != "true" ]; then
-          uv run semantic-release -v version --as-prerelease --prerelease-token alpha
-        elif [ "$BRANCH" = "main" ] && [ "${{ inputs.production_release }}" != "true" ]; then
-          uv run semantic-release -v version --as-prerelease
-        elif [ "$BRANCH" = "main" ] && [ "${{ inputs.production_release }}" == "true" ]; then
-          uv run semantic-release -v version
-        fi
-
-    - name: Check Release and Publish
-      id: publish
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-      run: |
-        BEFORE_TAG="${{ steps.version.outputs.before_tag }}"
-        AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-
-        if [ "$BEFORE_TAG" != "$AFTER_TAG" ]; then
-          echo "released=true" >> "$GITHUB_OUTPUT"
-          echo "version=${AFTER_TAG#v}" >> "$GITHUB_OUTPUT"
-          echo "tag=$AFTER_TAG" >> "$GITHUB_OUTPUT"
-          uv run semantic-release publish
-        else
-          echo "released=false" >> "$GITHUB_OUTPUT"
-        fi
+    - name: Semantic Release (production)
+      id: release-prod
+      if: github.ref_name == 'main' && inputs.production_release == 'true'
+      uses: python-semantic-release/python-semantic-release@v10.5.3
+      with:
+        github_token: ${{ inputs.github_token }}
+        git_committer_name: ${{ inputs.git_user_name }}
+        git_committer_email: ${{ inputs.git_user_email }}
+        directory: ${{ inputs.working-directory }}

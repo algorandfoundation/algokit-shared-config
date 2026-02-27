@@ -3,14 +3,14 @@ name: Python Release
 on:
   workflow_call:
     inputs:
-      python-version:
-        required: false
-        type: string
-        default: "3.12"
       working-directory:
         required: false
         type: string
         default: "."
+      artifact-name:
+        required: false
+        type: string
+        default: "python-dist"
       production_release:
         required: false
         type: boolean
@@ -20,6 +20,16 @@ on:
         required: true
       BOT_SK:
         required: true
+    outputs:
+      released:
+        description: "Whether a new version was released"
+        value: ${{ jobs.release.outputs.released }}
+      tag:
+        description: "The git tag of the release"
+        value: ${{ jobs.release.outputs.tag }}
+      artifact-name:
+        description: "The name of the uploaded dist artifact"
+        value: ${{ inputs.artifact-name }}
 
 jobs:
   ci:
@@ -30,6 +40,9 @@ jobs:
   release:
     needs: ci
     runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.semantic-release.outputs.released }}
+      tag: ${{ steps.semantic-release.outputs.tag }}
     permissions:
       id-token: write
       contents: write
@@ -51,11 +64,11 @@ jobs:
         with:
           github_token: ${{ steps.app-token.outputs.token }}
           production_release: ${{ inputs.production_release }}
-          python-version: ${{ inputs.python-version }}
           working-directory: ${{ inputs.working-directory }}
 
-      - name: Publish to PyPI
+      - name: Upload dist artifact
         if: steps.semantic-release.outputs.released == 'true'
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: actions/upload-artifact@v7
         with:
-          verbose: true
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.working-directory }}/dist/
