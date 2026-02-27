@@ -66,6 +66,15 @@ jobs:
           production_release: ${{ inputs.production_release }}
           working-directory: ${{ inputs.working-directory }}
 
+      - name: Install uv
+        if: steps.semantic-release.outputs.released == 'true'
+        uses: astral-sh/setup-uv@v7
+
+      - name: Build
+        if: steps.semantic-release.outputs.released == 'true'
+        run: uv build
+        working-directory: ${{ inputs.working-directory }}
+
       - name: Upload dist artifact
         if: steps.semantic-release.outputs.released == 'true'
         uses: actions/upload-artifact@v7

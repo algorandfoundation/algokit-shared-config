@@ -42,6 +42,7 @@ runs:
         git_committer_name: ${{ inputs.git_user_name }}
         git_committer_email: ${{ inputs.git_user_email }}
         directory: ${{ inputs.working-directory }}
+        build: "false"
         prerelease: true
 
     - name: Semantic Release (beta)
@@ -53,6 +54,7 @@ runs:
         git_committer_name: ${{ inputs.git_user_name }}
         git_committer_email: ${{ inputs.git_user_email }}
         directory: ${{ inputs.working-directory }}
+        build: "false"
         prerelease: true
 
     - name: Semantic Release (production)
@@ -64,3 +66,4 @@ runs:
         git_committer_name: ${{ inputs.git_user_name }}
         git_committer_email: ${{ inputs.git_user_email }}
         directory: ${{ inputs.working-directory }}
+        build: "false"
