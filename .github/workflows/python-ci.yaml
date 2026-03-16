@@ -22,7 +22,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v6
 
-      - uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@feat/python-release-workflow
+      - uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
         with:
           working-directory: ${{ inputs.working-directory }}
           install-algokit: ${{ inputs.install-algokit }}
@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Python and algokit
-        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@feat/python-release-workflow
+        uses: algorandfoundation/algokit-shared-config/.github/actions/setup-algokit-python@main
         with:
           working-directory: ${{ inputs.working-directory }}
           install-algokit: ${{ inputs.install-algokit }}
