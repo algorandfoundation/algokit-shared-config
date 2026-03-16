@@ -1,5 +1,5 @@
 name: Python Semantic Release
-description: Run python-semantic-release with branch-based prerelease strategy
+description: Run python-semantic-release
 
 inputs:
   github_token:
@@ -25,10 +25,10 @@ inputs:
 outputs:
   released:
     description: "Whether a release was created"
-    value: ${{ steps.release-alpha.outputs.released == 'true' || steps.release-beta.outputs.released == 'true' || steps.release-prod.outputs.released == 'true' }}
+    value: ${{ steps.release.outputs.released }}
   tag:
     description: "Git tag created (empty if no release)"
-    value: ${{ steps.release-alpha.outputs.tag || steps.release-beta.outputs.tag || steps.release-prod.outputs.tag }}
+    value: ${{ steps.release.outputs.tag }}
 
 runs:
   using: composite
@@ -42,50 +42,24 @@ runs:
         git config user.name "${{ inputs.git_user_name }}"
         git config user.email "${{ inputs.git_user_email }}"
 
-    - name: Semantic Release (alpha)
-      id: release-alpha
-      if: github.ref_name == 'alpha' && inputs.production_release != 'true'
+    - name: Semantic Release
+      id: release
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
         BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        uv run semantic-release -v version --as-prerelease --prerelease-token alpha
+        if [ "${{ inputs.production_release }}" == "true" ]; then
+          uv run semantic-release -v version
+        else
+          uv run semantic-release -v version --as-prerelease
+        fi
         AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
         if [ "$BEFORE_TAG" != "$AFTER_TAG" ]; then
           echo "released=true" >> "$GITHUB_OUTPUT"
           echo "tag=$AFTER_TAG" >> "$GITHUB_OUTPUT"
+        else
+          echo "released=false" >> "$GITHUB_OUTPUT"
         fi
       env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-
-    - name: Semantic Release (beta)
-      id: release-beta
-      if: github.ref_name == 'main' && inputs.production_release != 'true'
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: |
-        BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        uv run semantic-release -v version --as-prerelease
-        AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        if [ "$BEFORE_TAG" != "$AFTER_TAG" ]; then
-          echo "released=true" >> "$GITHUB_OUTPUT"
-          echo "tag=$AFTER_TAG" >> "$GITHUB_OUTPUT"
-        fi
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-
-    - name: Semantic Release (production)
-      id: release-prod
-      if: github.ref_name == 'main' && inputs.production_release == 'true'
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: |
-        BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        uv run semantic-release -v version
-        AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        if [ "$BEFORE_TAG" != "$AFTER_TAG" ]; then
-          echo "released=true" >> "$GITHUB_OUTPUT"
-          echo "tag=$AFTER_TAG" >> "$GITHUB_OUTPUT"
-        fi
-      env:
+        GH_TOKEN: ${{ inputs.github_token }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
