@@ -1,0 +1,65 @@
+name: Python Semantic Release
+description: Run python-semantic-release
+
+inputs:
+  github_token:
+    description: "GitHub token for pushing tags/releases"
+    required: true
+  production_release:
+    description: "Whether this is a production release"
+    required: false
+    default: "false"
+  git_user_name:
+    description: "Git user name for release commits"
+    required: false
+    default: "engineering-ci[bot]"
+  git_user_email:
+    description: "Git user email for release commits"
+    required: false
+    default: "179917785+engineering-ci[bot]@users.noreply.github.com"
+  working-directory:
+    description: "Working directory for the project"
+    required: false
+    default: "."
+
+outputs:
+  released:
+    description: "Whether a release was created"
+    value: ${{ steps.release.outputs.released }}
+  tag:
+    description: "Git tag created (empty if no release)"
+    value: ${{ steps.release.outputs.tag }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+
+    - name: Configure git
+      shell: bash
+      run: |
+        git config user.name "${{ inputs.git_user_name }}"
+        git config user.email "${{ inputs.git_user_email }}"
+
+    - name: Semantic Release
+      id: release
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        BEFORE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ "${{ inputs.production_release }}" == "true" ]; then
+          uv run semantic-release -v version
+        else
+          uv run semantic-release -v version --as-prerelease
+        fi
+        AFTER_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ "$BEFORE_TAG" != "$AFTER_TAG" ]; then
+          echo "released=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$AFTER_TAG" >> "$GITHUB_OUTPUT"
+        else
+          echo "released=false" >> "$GITHUB_OUTPUT"
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
