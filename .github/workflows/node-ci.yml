@@ -4,11 +4,11 @@ on:
       node-version:
         required: false
         type: string
-        default: 18.x
+        default: 22.x
       working-directory:
         required: false
         type: string
-        default: "."
+        default: '.'
       lint-script:
         required: false
         type: string
@@ -27,7 +27,7 @@ on:
       test-environment-variables:
         required: false
         type: string
-        default: "{}"
+        default: '{}'
       output-test-results:
         required: false
         type: boolean
@@ -35,7 +35,7 @@ on:
       test-results-file-pattern:
         required: false
         type: string
-        default: "**/test-results.xml"
+        default: '**/test-results.xml'
       audit-script:
         required: false
         type: string
@@ -59,10 +59,6 @@ on:
       pre-run-script:
         required: false
         type: string
-    secrets:
-      npm-auth-token:
-        description: NPM auth token (don't pass in on a PR build on a public repository)
-        required: false
 
 jobs:
   node-ci:
@@ -75,41 +71,24 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      # 1. Install pnpm before setting up Node
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
-      # setup node + private repo access
       - name: Use Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
-
-      # actions/cache needs a real path; pnpm's store location varies by OS/config,
-      # so resolve it dynamically instead of trying to cache "pnpm".
-      - name: Resolve pnpm store path
-        id: pnpm-store
-        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache pnpm store
-        if: ${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) != '' }}
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-store.outputs.path }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          cache: pnpm
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
         run: ${{ inputs.pre-run-script }}
-      - run: pnpm install --frozen-lockfile --prod=false
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
+      - run: pnpm fetch --frozen-lockfile --prod=false
+      - run: pnpm install --frozen-lockfile --prod=false --offline
       - run: pnpm rebuild && pnpm run --if-present prepare
 
       - name: Audit
@@ -146,5 +125,3 @@ jobs:
       - name: Build
         if: ${{ inputs.run-build }}
         run: ${{ inputs.build-script }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}

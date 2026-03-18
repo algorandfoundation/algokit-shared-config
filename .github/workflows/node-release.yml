@@ -1,0 +1,87 @@
+on:
+  workflow_call:
+    secrets:
+      BOT_ID:
+        required: true
+      BOT_SK:
+        required: true
+    inputs:
+      node-version:
+        description: Node.js version to use
+        required: false
+        type: string
+        default: 22.x
+      artifact-name:
+        required: false
+        type: string
+        default: package
+      git_user_name:
+        description: 'Git user name for release commits'
+        required: false
+        type: string
+        default: 'engineering-ci[bot]'
+      git_user_email:
+        description: 'Git user email for release commits'
+        required: false
+        type: string
+        default: '179917785+engineering-ci[bot]@users.noreply.github.com'
+      dry-run:
+        description: 'Run semantic-release in dry-run mode'
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate bot token
+        uses: actions/create-github-app-token@v1
+        id: app_token
+        with:
+          app_id: ${{ secrets.BOT_ID }}
+          private_key: ${{ secrets.BOT_SK }}
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app_token.outputs.token }}
+
+      - name: Configure git user
+        shell: bash
+        run: |
+          git config --global user.name "${{ inputs.git_user_name }}"
+          git config --global user.email "${{ inputs.git_user_email }}"
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Use Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+
+      - name: Download built package
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: artifacts
+
+      - name: Unzip package
+        shell: bash
+        run: |
+          mkdir -p dist
+          unzip -q "artifacts/${{ inputs.artifact-name }}.zip" -d dist
+
+      - name: Install dependencies to get semantic release components and plugins
+        run: pnpm fetch --frozen-lockfile --prod=false
+      - run: pnpm install --frozen-lockfile --prod=false --offline
+
+      - name: Semantic release
+        run: npx semantic-release ${{ inputs.dry-run == true && '--dry-run' || '' }}
+        env:
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}

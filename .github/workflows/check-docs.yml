@@ -4,14 +4,14 @@ on:
       node-version:
         required: false
         type: string
-        default: 18.x
+        default: 22.x
 
 jobs:
   check_docs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
@@ -22,13 +22,32 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            docs/pnpm-lock.yaml
+
+      - name: Fetch root dependencies
+        shell: bash
+        run: pnpm fetch --frozen-lockfile --prod=false
+
+      - name: Install root dependencies
+        shell: bash
+        run: pnpm install --frozen-lockfile --prod=false --offline
+
+      - name: Fetch docs dependencies
+        shell: bash
+        run: pnpm --dir docs fetch --frozen-lockfile --prod=false
+
+      - name: Install docs dependencies
+        shell: bash
+        run: pnpm --dir docs install --frozen-lockfile --prod=false --offline
 
       - name: Check docs are up to date
         shell: bash
         run: |
           set -euo pipefail
-          pnpm install --frozen-lockfile 
-          if ! pnpm run generate:code-docs; then
+          if ! pnpm run docs:build; then
             echo "Docs generation failed. Recent git status and diff:"
             git status --short
             git diff --stat || true

@@ -4,7 +4,7 @@ on:
       node-version:
         required: false
         type: string
-        default: 18.x
+        default: 22.x
       working-directory:
         required: false
         type: string
@@ -16,7 +16,7 @@ on:
       artifact-name:
         required: false
         type: string
-        default: node-app
+        default: package
       static-site:
         required: false
         type: boolean
@@ -32,10 +32,6 @@ on:
         required: false
         type: string
         default: .env.sample
-    secrets:
-      npm-auth-token:
-        description: NPM auth token (optional, GITHUB_TOKEN is used by default)
-        required: false
     outputs:
       artifact-name:
         description: Name of the artifact created by this workflow
@@ -52,43 +48,33 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      # setup node + private repo access
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Use Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@makerxstudio'
-          cache: 'npm'
-          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+          cache: pnpm
+          cache-dependency-path: ${{ format('{0}/pnpm-lock.yaml', inputs.working-directory) }}
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
         run: ${{ inputs.pre-run-script }}
 
-      # prepare static sites for config transformation upon later deployment
       - if: ${{ inputs.static-site }}
         run: sed -n 's/\(${{ inputs.static-site-env-prefix }}_[A-Z0-9_]\+\)=\(.*\)/\1={{\1}}/p' ${{ inputs.sample-env-path }} > .env && cat .env
 
-      # run npm ci preventing script access to npm auth token
-      - run: npm ci --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
-      # allow scripts to run without npm auth token
-      - run: npm rebuild && npm run prepare --if-present
-
-      - name: Prepare
-        run: npm run prepare --if-present
+      - run: pnpm fetch --frozen-lockfile --prod=false
+      - run: pnpm install --frozen-lockfile --prod=false --ignore-scripts --offline
+      - run: pnpm rebuild && pnpm run --if-present prepare
 
       - name: Build
-        run: npm run build
-        # CDK infrastructure build calls npm ci on /infrastructure/build, which may fail without NODE_AUTH_TOKEN
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
+        run: pnpm run build
 
       - name: Zip build folder
         run: pushd ${{ inputs.build-path }}; zip -q -r ../${{ inputs.artifact-name }}.zip *
