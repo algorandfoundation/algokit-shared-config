@@ -1,0 +1,57 @@
+name: Publish TypeScript Docs to Algorand Developer Portal
+description: Builds TypeScript documentation with TypeDoc and publishes to a dedicated docs branch for consumption by the Developer Portal
+
+inputs:
+  docs_path:
+    description: "Location relative to the repo root of the docs folder"
+    required: false
+    default: ".devportal"
+  docs_branch:
+    description: "Name of the branch to publish the docs to"
+    required: false
+    default: "docs-dist"
+  github_token:
+    description: "GitHub token for publishing to docs branch"
+    required: true
+  guides_path:
+    description: "Location of handwritten guides to copy (relative to repo root)"
+    required: false
+    default: "docs/guides"
+  node_version:
+    description: "Node.js version to use"
+    required: false
+    default: "22.x"
+  typedoc_config:
+    description: "Path to TypeDoc config file"
+    required: false
+    default: "typedoc.devportal.json"
+
+outputs:
+  docs_target:
+    description: "The version target that was published (e.g., 'latest' or 'v1.2.3')"
+    value: ${{ steps.publish.outputs.docs_target }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    - name: Install dependencies
+      run: npm ci
+      shell: bash
+
+    - name: Build docs
+      shell: bash
+      run: npx typedoc --options ${{ inputs.typedoc_config }}
+
+    - name: Publish docs
+      id: publish
+      uses: algorandfoundation/algokit-shared-config/.github/actions/devportal-publish-docs-core@main
+      with:
+        docs_path: ${{ inputs.docs_path }}
+        docs_branch: ${{ inputs.docs_branch }}
+        github_token: ${{ inputs.github_token }}
+        guides_path: ${{ inputs.guides_path }}

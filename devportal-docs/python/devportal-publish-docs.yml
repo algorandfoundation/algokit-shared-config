@@ -1,0 +1,15 @@
+name: Publish Dev Portal Documentation
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish Docs for Dev Portal
+        uses: algorandfoundation/algokit-shared-config/.github/actions/devportal-publish-docs-py@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
