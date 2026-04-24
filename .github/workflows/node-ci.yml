@@ -4,7 +4,7 @@ on:
       node-version:
         required: false
         type: string
-        default: 18.x
+        default: 24.x
       working-directory:
         required: false
         type: string
@@ -12,18 +12,18 @@ on:
       lint-script:
         required: false
         type: string
-        default: pnpm run --if-present lint
+        default: npm run --if-present lint
       compile-script:
         required: false
         type: string
-        default: pnpm run --if-present check-types
+        default: npm run --if-present check-types
       pre-test-script:
         required: false
         type: string
       test-script:
         required: false
         type: string
-        default: pnpm run --if-present test
+        default: npm run --if-present test
       test-environment-variables:
         required: false
         type: string
@@ -39,11 +39,11 @@ on:
       audit-script:
         required: false
         type: string
-        default: pnpm audit
+        default: npm audit
       build-script:
         required: false
         type: string
-        default: pnpm run build
+        default: npm run build
       run-build:
         required: false
         type: boolean
@@ -59,9 +59,44 @@ on:
       pre-run-script:
         required: false
         type: string
+      install-algokit:
+        description: "Install algokit via pipx and start localnet before tests"
+        required: false
+        type: boolean
+        default: false
+      setup-polytest:
+        description: "Setup polytest framework before tests"
+        required: false
+        type: boolean
+        default: false
+      polytest-version:
+        description: "Polytest version to install"
+        required: false
+        type: string
+        default: "0.7.0"
+      polytest-validate-script:
+        description: "Script to validate polytest tests"
+        required: false
+        type: string
+        default: ""
+      polytest-generate-script:
+        description: "Script to generate polytest files"
+        required: false
+        type: string
+        default: ""
+      polytest-generate-working-directory:
+        description: "Working directory for polytest generation"
+        required: false
+        type: string
+        default: "."
+      run-mock-servers:
+        description: "Start polytest mock servers (algod, indexer, kmd) before tests"
+        required: false
+        type: boolean
+        default: false
     secrets:
       npm-auth-token:
-        description: NPM auth token (don't pass in on a PR build on a public repository)
+        description: NPM auth token (don"t pass in on a PR build on a public repository)
         required: false
 
 jobs:
@@ -75,42 +110,39 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      # 1. Install pnpm before setting up Node
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      # setup node + private repo access
       - name: Use Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
-
-      # actions/cache needs a real path; pnpm's store location varies by OS/config,
-      # so resolve it dynamically instead of trying to cache "pnpm".
-      - name: Resolve pnpm store path
-        id: pnpm-store
-        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache pnpm store
-        if: ${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) != '' }}
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-store.outputs.path }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          cache: "npm"
 
       - name: Pre-run
         if: ${{ inputs.pre-run-script }}
         run: ${{ inputs.pre-run-script }}
-      - run: pnpm install --frozen-lockfile --prod=false
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}
-      - run: pnpm rebuild && pnpm run --if-present prepare
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - run: npm rebuild && npm run --if-present prepare
+
+      - name: Setup Polytest
+        if: ${{ inputs.setup-polytest }}
+        uses: algorandfoundation/algokit-polytest/.github/actions/setup-polytest@main
+        with:
+          version: ${{ inputs.polytest-version }}
+
+      - name: Validate polytest tests
+        if: ${{ inputs.polytest-validate-script != '' }}
+        run: ${{ inputs.polytest-validate-script }}
+
+      - name: Generate polytest files
+        if: ${{ inputs.polytest-generate-script != '' }}
+        working-directory: ${{ inputs.polytest-generate-working-directory }}
+        run: ${{ inputs.polytest-generate-script }}
 
       - name: Audit
         run: ${{ inputs.audit-script }}
@@ -124,6 +156,34 @@ jobs:
 
       - name: Compile
         run: ${{ inputs.compile-script }}
+
+      - name: Install algokit
+        if: ${{ inputs.install-algokit }}
+        run: pipx install algokit
+
+      - name: Start LocalNet
+        if: ${{ inputs.install-algokit }}
+        run: |
+          algokit localnet start
+          npx --yes wait-on tcp:4001 -t 30000
+
+      - name: Start algod mock server
+        if: ${{ inputs.run-mock-servers }}
+        uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
+        with:
+          client: algod
+
+      - name: Start indexer mock server
+        if: ${{ inputs.run-mock-servers }}
+        uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
+        with:
+          client: indexer
+
+      - name: Start kmd mock server
+        if: ${{ inputs.run-mock-servers }}
+        uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
+        with:
+          client: kmd
 
       - name: Pre-test
         if: ${{ inputs.pre-test-script }}
@@ -146,5 +206,3 @@ jobs:
       - name: Build
         if: ${{ inputs.run-build }}
         run: ${{ inputs.build-script }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm-auth-token || secrets.GITHUB_TOKEN }}

@@ -10,10 +10,21 @@ on:
         required: false
         type: string
         default: docs
+      artifact-path:
+        description: "Path to the built docs artifact"
+        required: false
+        type: string
+        default: docs/dist
 
 jobs:
-  check_docs:
+  publish_docs:
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -39,3 +50,9 @@ jobs:
 
       - name: Build documentation
         run: pnpm --dir ${{ inputs.docs-directory }} build
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@main
+        with:
+          artifact_path: ${{ inputs.artifact-path }}

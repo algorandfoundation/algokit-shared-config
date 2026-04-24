@@ -36,7 +36,7 @@ runs:
       shell: bash
       run: pipx install algokit
 
-    - name: Run localnet
+    - name: Start LocalNet
       if: inputs.install-algokit == 'true'
       shell: bash
       run: algokit localnet start
