@@ -157,7 +157,7 @@ jobs:
         run: ${{ inputs.audit-script }}
 
       - name: Commit lint
-        if: ${{ inputs.run-commit-lint }}
+        if: ${{ inputs.run-commit-lint && github.event_name != 'workflow_dispatch' }}
         run: npx commitlint --from ${{ inputs.commit-lint-from }} --to ${{ inputs.commit-lint-to }} --verbose
 
       - name: Lint
