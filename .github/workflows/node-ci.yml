@@ -52,10 +52,14 @@ on:
         required: false
         type: boolean
         default: false
-      commit-lint-script:
+      commit-lint-from:
         required: false
         type: string
-        default: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        default: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+      commit-lint-to:
+        required: false
+        type: string
+        default: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       pre-run-script:
         required: false
         type: string
@@ -154,7 +158,7 @@ jobs:
 
       - name: Commit lint
         if: ${{ inputs.run-commit-lint }}
-        run: ${{ inputs.commit-lint-script }}
+        run: npx commitlint --from ${{ inputs.commit-lint-from }} --to ${{ inputs.commit-lint-to }} --verbose
 
       - name: Lint
         run: ${{ inputs.lint-script }}
