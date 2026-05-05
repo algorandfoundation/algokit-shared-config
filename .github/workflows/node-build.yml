@@ -20,10 +20,6 @@ on:
       pre-run-script:
         required: false
         type: string
-    secrets:
-      npm-auth-token:
-        description: NPM auth token (optional, GITHUB_TOKEN is used by default)
-        required: false
 
 jobs:
   build:

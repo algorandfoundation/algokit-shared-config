@@ -83,10 +83,6 @@ on:
         required: false
         type: string
         default: "0.7.0"
-    secrets:
-      npm-auth-token:
-        description: NPM auth token (don"t pass in on a PR build on a public repository)
-        required: false
 
 jobs:
   node-ci:
