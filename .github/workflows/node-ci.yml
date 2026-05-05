@@ -73,8 +73,8 @@ on:
         required: false
         type: boolean
         default: false
-      setup-polytest:
-        description: "Setup polytest framework before tests"
+      polytest:
+        description: "Setup polytest, run `npm run polytest`, and start algod/indexer/kmd mock servers"
         required: false
         type: boolean
         default: false
@@ -83,26 +83,6 @@ on:
         required: false
         type: string
         default: "0.7.0"
-      polytest-validate-script:
-        description: "Script to validate polytest tests"
-        required: false
-        type: string
-        default: ""
-      polytest-generate-script:
-        description: "Script to generate polytest files"
-        required: false
-        type: string
-        default: ""
-      polytest-generate-working-directory:
-        description: "Working directory for polytest generation"
-        required: false
-        type: string
-        default: "."
-      run-mock-servers:
-        description: "Start polytest mock servers (algod, indexer, kmd) before tests"
-        required: false
-        type: boolean
-        default: false
     secrets:
       npm-auth-token:
         description: NPM auth token (don"t pass in on a PR build on a public repository)
@@ -139,19 +119,14 @@ jobs:
       - run: npm rebuild && npm run --if-present prepare
 
       - name: Setup Polytest
-        if: ${{ inputs.setup-polytest }}
+        if: ${{ inputs.polytest }}
         uses: algorandfoundation/algokit-polytest/.github/actions/setup-polytest@main
         with:
           version: ${{ inputs.polytest-version }}
 
-      - name: Validate polytest tests
-        if: ${{ inputs.polytest-validate-script != '' }}
-        run: ${{ inputs.polytest-validate-script }}
-
-      - name: Generate polytest files
-        if: ${{ inputs.polytest-generate-script != '' }}
-        working-directory: ${{ inputs.polytest-generate-working-directory }}
-        run: ${{ inputs.polytest-generate-script }}
+      - name: Polytest
+        if: ${{ inputs.polytest }}
+        run: npm run polytest
 
       - name: Audit
         run: ${{ inputs.audit-script }}
@@ -181,19 +156,19 @@ jobs:
         run: pipx install puyapy
 
       - name: Start algod mock server
-        if: ${{ inputs.run-mock-servers }}
+        if: ${{ inputs.polytest }}
         uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
         with:
           client: algod
 
       - name: Start indexer mock server
-        if: ${{ inputs.run-mock-servers }}
+        if: ${{ inputs.polytest }}
         uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
         with:
           client: indexer
 
       - name: Start kmd mock server
-        if: ${{ inputs.run-mock-servers }}
+        if: ${{ inputs.polytest }}
         uses: algorandfoundation/algokit-polytest/.github/actions/run-mock-server@main
         with:
           client: kmd
