@@ -7,13 +7,13 @@ jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v6
 
-      - name: Build Typedoc Documentation
+      - name: Build documentation
         uses: algorandfoundation/algokit-shared-config/.github/actions/generate-typescript-docs@main
-      - name: Upload Documentation Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
         with:
           name: github-pages-docs
           path: docs/_html
@@ -23,13 +23,13 @@ jobs:
     needs: build-docs
     runs-on: ubuntu-latest
     steps:
-      - name: Download Documentation Artifact
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: github-pages-docs
           path: docs/downloaded
 
-      - name: Deploy Documentation
+      - name: Deploy to GitHub Pages
         uses: algorandfoundation/algokit-shared-config/.github/actions/publish-docs@main
         with:
           artifact_path: docs/downloaded
