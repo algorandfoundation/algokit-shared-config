@@ -95,12 +95,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
       - name: Use Node.js ${{ inputs.node-version }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ inputs.node-version }}
           cache: "npm"
@@ -179,7 +179,7 @@ jobs:
 
       - name: Publish test results
         if: ${{ always() && inputs.output-test-results }}
-        uses: phoenix-actions/test-reporting@v15
+        uses: phoenix-actions/test-reporting@7317eea6e13c47348dd0bb318669485157c518d6 # v16
         with:
           name: Test results
           path: ${{ inputs.test-results-file-pattern }}
